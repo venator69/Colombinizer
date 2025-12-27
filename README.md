@@ -1,3 +1,11 @@
+# Welcome to Colombinizer !
+
+This app allows you to simulate and visualize 
+electric forces between charged particles using 
+Coulomb's law. You can add, move, and modify 
+particles to see how they interact with each 
+other based on their charges and distances.
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
