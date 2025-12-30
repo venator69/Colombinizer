@@ -25,7 +25,7 @@ export default function Home() {
 
         <View style={styles.containerStyle}>
           <Text style={styles.titleText}>
-            Coulombinizer
+            Columbinizer
           </Text>
         </View>
         <View style={styles.containerStyle}>
