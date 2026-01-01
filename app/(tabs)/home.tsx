@@ -25,12 +25,12 @@ export default function Home() {
 
         <View style={styles.containerStyle}>
           <Text style={styles.titleText}>
-            Coulombinizer
+            Colombinizer
           </Text>
         </View>
         <View style={styles.containerStyle}>
           <Text style={styles.description}>
-            Welcome to the Columbinizer! 
+            Welcome to the Colombinizer! 
             This app allows you to simulate and visualize 
             electric forces between charged particles using 
             Coulomb's law. You can add, move, and modify 
@@ -117,7 +117,7 @@ export default function Home() {
         </View>
         <View style={styles.containerStyle}>
           <Text style={styles.titleText}>
-            How to Use the App
+            How to Use the Virtual Lab
           </Text>
           <Text style={styles.subtitleText}>
             1. Adding and Manipulating Charges
