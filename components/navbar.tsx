@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
+import { Ionicons } from '@expo/vector-icons'; // Import ikon
 
 export default function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Untuk Hamburger Mobile
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // Untuk Dropdown Mobile (Ikon Akun)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Untuk Dropdown Desktop
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
@@ -42,14 +43,16 @@ export default function Navbar() {
         <Text style={styles.logo}>Colombinizer</Text>
 
         {isMobile ? (
-          /* Mobile */
-          <TouchableOpacity onPress={() => setIsMenuOpen(!isMenuOpen)} style={styles.hamburger}>
-            <View style={styles.line} />
-            <View style={styles.line} />
-            <View style={styles.line} />
+          /* Mobile - Diganti dari Hamburger ke Ikon Profil */
+          <TouchableOpacity onPress={() => setIsMenuOpen(!isMenuOpen)} style={styles.accountIcon}>
+            <Ionicons 
+              name={email ? "person-circle" : "person-circle-outline"} 
+              size={32} 
+              color="white" 
+            />
           </TouchableOpacity>
         ) : (
-          /* Desktop */
+          /* Desktop - Tetap Sama */
           <View style={styles.menu}>
             <TouchableOpacity onPress={() => navigateTo("/(tabs)/home")}><Text style={styles.menuText}>Home</Text></TouchableOpacity>
             <TouchableOpacity onPress={() => navigateTo("/(tabs)/learn")}><Text style={styles.menuText}>Learn</Text></TouchableOpacity>
@@ -65,7 +68,6 @@ export default function Navbar() {
                   <Text style={styles.menuText}>{email} ▾</Text>
                 </TouchableOpacity>
 
-                {/* Dropdown Desktop */}
                 {isDropdownOpen && (
                   <View style={styles.dropdown}>
                     <TouchableOpacity onPress={handleLogout} style={styles.dropdownItem}>
@@ -86,24 +88,23 @@ export default function Navbar() {
         )}
       </View>
 
-      {/* Overlay Mobile */}
+      {/* Dropdown Mobile - Diposisikan melayang di kanan atas tepat di bawah ikon */}
       {isMobile && isMenuOpen && (
-        <View style={styles.mobileMenu}>
-          <TouchableOpacity style={styles.mobileItem} onPress={() => navigateTo("/(tabs)/home")}><Text style={styles.mobileText}>Home</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.mobileItem} onPress={() => navigateTo("/(tabs)/learn")}><Text style={styles.mobileText}>Learn</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.mobileItem} onPress={() => navigateTo("/(tabs)/lab")}><Text style={styles.mobileText}>Virtual Lab</Text></TouchableOpacity>
-          {email && <TouchableOpacity style={styles.mobileItem} onPress={() => navigateTo("/(tabs)/history")}><Text style={styles.mobileText}>History</Text></TouchableOpacity>}
-          <View style={styles.separator} />
+        <View style={styles.mobileDropdown}>
           {email ? (
             <View>
+              <Text style={styles.userEmailText}>Logged in as:</Text>
               <Text style={styles.userEmail}>{email}</Text>
-              <TouchableOpacity style={styles.mobileItem} onPress={handleLogout}>
-                <Text style={[styles.mobileText, {color: '#ff4444'}]}>Logout</Text>
+              <View style={styles.separator} />
+              <TouchableOpacity style={styles.dropdownItemRow} onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={20} color="#ff4444" />
+                <Text style={[styles.dropdownItemText, {color: '#ff4444'}]}>Logout</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity style={styles.mobileItem} onPress={() => navigateTo("/(auth)/login")}>
-              <Text style={[styles.mobileText, {color: '#4CAF50'}]}>Login</Text>
+            <TouchableOpacity style={styles.dropdownItemRow} onPress={() => navigateTo("/(auth)/login")}>
+              <Ionicons name="log-in-outline" size={20} color="#4CAF50" />
+              <Text style={[styles.dropdownItemText, {color: '#4CAF50'}]}>Login</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -143,15 +144,30 @@ const styles = StyleSheet.create({
   dropdownItem: { padding: 12, alignItems: "center" },
   logoutText: { color: "#ff4444", fontWeight: "bold" },
 
-  // Mobile Styles
-  hamburger: { gap: 5 },
-  line: { width: 25, height: 3, backgroundColor: "white", borderRadius: 2 },
-  mobileMenu: { backgroundColor: "#001a4d", padding: 20, position: 'absolute', top: 70, left: 0, right: 0, elevation: 5 },
-  mobileItem: { paddingVertical: 15, borderBottomWidth: 0.5, borderBottomColor: "rgba(255,255,255,0.1)" },
-  mobileText: { color: "white", fontSize: 18, textAlign: 'center' },
-  userEmail: { color: "#aaa", fontSize: 14, textAlign: 'center', marginTop: 10 },
-  separator: { height: 1, backgroundColor: "rgba(255,255,255,0.2)", marginVertical: 10 },
+  // Mobile Account Icon
+  accountIcon: { padding: 5 },
+
+  // Perbaikan Dropdown Mobile agar melayang di pojok kanan bawah ikon
+  mobileDropdown: { 
+    position: 'absolute', 
+    top: 65, 
+    right: 15, 
+    backgroundColor: "white", 
+    padding: 15, 
+    borderRadius: 12,
+    width: 220,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  userEmailText: { color: "#888", fontSize: 11, textTransform: 'uppercase' },
+  userEmail: { color: "#002467", fontSize: 13, fontWeight: 'bold', marginBottom: 5 },
+  separator: { height: 1, backgroundColor: "#eee", marginVertical: 8 },
+  dropdownItemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
+  dropdownItemText: { fontSize: 16, fontWeight: '500' },
   
-  // Login Button
+  // Login Button Desktop
   loginBtn: { paddingHorizontal: 15, paddingVertical: 6, borderRadius: 20, marginLeft: 10 }
 });

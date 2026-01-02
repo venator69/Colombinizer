@@ -1,26 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../../components/navbar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
 
   const fetchHistory = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
+      setIsLoggedIn(true);
       const { data, error } = await supabase
         .from('experiments')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (!error && data) {
-        // Grouping data yang disimpan dalam rentang waktu berdekatan (2 detik)
         const groups = data.reduce((acc: any, item: any) => {
           const time = new Date(item.created_at).getTime();
           const groupKey = Math.floor(time / 2000); 
@@ -32,6 +35,9 @@ export default function HistoryScreen() {
 
         setHistory(Object.values(groups));
       }
+    } else {
+      setIsLoggedIn(false);
+      setHistory([]);
     }
     setLoading(false);
   };
@@ -77,7 +83,7 @@ export default function HistoryScreen() {
       
         <View style={styles.insightBox}>
           <Text style={styles.insightText}>
-             💡 <Text style={{fontWeight: 'bold'}}>:</Text> This scenario produces a maximum force of {maxForce.toExponential(2)} N.
+              💡 <Text style={{fontWeight: 'bold'}}>:</Text> This scenario produces a maximum force of {maxForce.toExponential(2)} N.
           </Text>
         </View>
       </View>
@@ -86,36 +92,56 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#f8f9fa" }}>
+      <SafeAreaView style={{ flex: 0, backgroundColor: "transparent" }} />
+      
       <Navbar />
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>Experiment History</Text>
-        
-        {loading && !refreshing ? (
-          <ActivityIndicator size="large" color="#002467ff" style={{ marginTop: 50 }} />
-        ) : (
-          <FlatList
-            data={history}
-            keyExtractor={(item) => item[0].id.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={{ paddingBottom: 30 }}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No experiment history yet.</Text>
-                <Text style={styles.emptySubText}>Data will appear here after you click 'Save' in the Virtual Lab.</Text>
-              </View>
-            }
-          />
-        )}
-      </SafeAreaView>
+
+      <View style={styles.container}>
+        <View style={{ paddingHorizontal: 20, flex: 1 }}>
+          <Text style={styles.title}>Experiment History</Text>
+          
+          {loading && !refreshing ? (
+            <ActivityIndicator size="large" color="#002467ff" style={{ marginTop: 50 }} />
+          ) : (
+            <FlatList
+              data={history}
+              keyExtractor={(item) => item[0].id.toString()}
+              renderItem={renderItem}
+              contentContainerStyle={{ paddingBottom: 30 }}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+              ListEmptyComponent={
+                <View style={styles.emptyState}>
+                  {!isLoggedIn ? (
+                    <>
+                      <Text style={[styles.emptyText, { color: '#F44336' }]}>Please Login First</Text>
+                      <Text style={styles.emptySubText}>You need to be logged in to view your experiment history.</Text>
+                      <TouchableOpacity 
+                        style={styles.loginButton} 
+                        onPress={() => router.push('/login')}
+                      >
+                        <Text style={styles.loginButtonText}>Go to Login</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.emptyText}>No experiment history yet.</Text>
+                      <Text style={styles.emptySubText}>Data will appear here after you click 'Save' in the Virtual Lab.</Text>
+                    </>
+                  )}
+                </View>
+              }
+            />
+          )}
+        </View>
+      </View>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: "#f8f9fa" },
   title: { fontSize: 28, fontWeight: 'bold', marginVertical: 20, color: '#002467ff' },
   card: {
     backgroundColor: 'white',
@@ -160,4 +186,12 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', marginTop: 100 },
   emptyText: { fontSize: 18, fontWeight: 'bold', color: '#adb5bd' },
   emptySubText: { color: '#ced4da', marginTop: 8, textAlign: 'center' },
+  loginButton: {
+    marginTop: 20,
+    backgroundColor: '#002467ff',
+    paddingHorizontal: 25,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  loginButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 });

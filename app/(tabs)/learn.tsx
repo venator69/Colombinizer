@@ -54,13 +54,11 @@ export default function Learn() {
     
     setUserAnswers(prev => ({ ...prev, [questionId]: index }));
     
-    // add score
     if (index === correctIndex) {
       setScore(prevScore => prevScore + 1);
     }
   };
 
-  {/*retake quiz*/}
   const retakeQuiz = () => {
     setUserAnswers({}); 
     setScore(0);       
@@ -77,10 +75,13 @@ export default function Learn() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#EEEEEE" }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <SafeAreaView style={styles.safeArea}>
-          <Navbar />
+      <SafeAreaView style={{ flex: 0, backgroundColor: "transparent" }} />
 
+      <Navbar />
+
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={styles.contentWrapper}>
+          
           <View style={[styles.mainWrapper, { width: isLarge ? "60%" : "100%" }]}>
             
             <View style={styles.containerStyle}>
@@ -92,7 +93,6 @@ export default function Learn() {
               <View style={styles.videoWrapper}>{renderVideo()}</View>
             </View>
 
-            {/* Score Card */}
             <View style={styles.scoreCard}>
               <View>
                 <Text style={styles.quizTitle}>Knowledge Check</Text>
@@ -148,14 +148,14 @@ export default function Learn() {
               </View>
             ))}
           </View>
-        </SafeAreaView>
+        </View>
       </ScrollView>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, alignItems: 'center' },
+  contentWrapper: { flex: 1, alignItems: 'center' }, // Pengganti SafeAreaView pembungkus agar tidak ada garis samping
   mainWrapper: { alignItems: 'center', width: '100%' },
   containerStyle: {
     margin: 12, padding: 16, borderRadius: 16, backgroundColor: "white", elevation: 5, width: '90%',

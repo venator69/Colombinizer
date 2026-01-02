@@ -303,178 +303,182 @@ export default function App() {
           onClose={() => setAlertConfig({ ...alertConfig, visible: false })}
         />
 
-        <Navbar />
+        <SafeAreaView style={{ flex: 0, backgroundColor: "transparent" }} />
 
-        <ScrollView
-          scrollEnabled={!dragging}
-          contentContainerStyle={{ paddingBottom: 40 }}
-        >
-          <SafeAreaView
-            style={{
-              flex: 1,
-              flexDirection: isLarge ? "row" : "column",
-            }}
+        <View style={{ backgroundColor: "#EEEEEEff", flex: 1 }}>
+          <Navbar />
+
+          <ScrollView
+            scrollEnabled={!dragging}
+            contentContainerStyle={{ paddingBottom: 40 }}
           >
-            {/* left side */}
-            <View style={{ width: isLarge ? "38%" : "100%" }}>
-              <View style={styles.containerStyle}>
-                <Text style={styles.titleText}>Coulomb's Law Simulator</Text>
-              </View>
-
-              <View style={styles.containerStyle}>
-                <Text style={{ fontSize: 24, fontWeight: "bold" }}>Force Display</Text>
-                <Text style={{ fontSize: 15 }}>Move the charges around to see the forces.</Text>
-                
-                <View 
-                  style={[styles.canvasStyle, isMobile && { height: 260 }]} 
-                  onLayout={(e) => setCanvas(e.nativeEvent.layout)}
-                >
-                  {canvas && (
-                    <>
-                      <Svg width={canvas.width} height={canvas.height} pointerEvents="none">
-                        {(() => {
-                          const spacing = 20;
-                          const lines = [];
-                          for (let x = 0; x < canvas.width; x += spacing) {
-                            lines.push(<SvgLine key={`v-${x}`} x1={x} y1={0} x2={x} y2={canvas.height} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />);
-                          }
-                          for (let y = 0; y < canvas.height; y += spacing) {
-                            lines.push(<SvgLine key={`h-${y}`} x1={0} y1={y} x2={canvas.width} y2={y} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />);
-                          }
-                          return lines;
-                        })()}
-                        {charges.map(c => (
-                          <SvgImage
-                            key={c.id}
-                            x={c.x} y={c.y}
-                            width={20} height={20}
-                            href={c.q > 0 ? require("../../assets/images/positive.png") : require("../../assets/images/negative.png")}
-                          />
-                        ))}
-                      </Svg>
-                      {charges.map(c => {
-                        const pan = Gesture.Pan()
-                          .onBegin(() => {
-                            setDragging(true);
-                            setCharges(prev => prev.map(ch => ch.id === c.id ? { ...ch, startX: ch.x, startY: ch.y } : ch));
-                          })
-                          .onUpdate(e => {
-                            if (!canvas) return;
-                            setCharges(prev => prev.map(ch => ch.id === c.id ? {
-                              ...ch,
-                              x: Math.max(0, Math.min(canvas.width - 20, (ch.startX ?? ch.x) + e.translationX)),
-                              y: Math.max(0, Math.min(canvas.height - 20, (ch.startY ?? ch.y) + e.translationY)),
-                            } : ch));
-                          })
-                          .onEnd(() => {
-                            setDragging(false);
-                            setCharges(prev => prev.map(ch => ch.id === c.id ? { ...ch, startX: undefined, startY: undefined } : ch));
-                          })
-                          .runOnJS(true);
-                        return (
-                          <GestureDetector key={c.id} gesture={pan}>
-                            <View style={{ position: "absolute", width: 30, height: 30, left: c.x - 5, top: c.y - 5 }} />
-                          </GestureDetector>
-                        );
-                      })}
-                    </>
-                  )}
+            <View
+              style={{
+                flex: 1,
+                flexDirection: isLarge ? "row" : "column",
+              }}
+            >
+              {/* left side */}
+              <View style={{ width: isLarge ? "38%" : "100%" }}>
+                <View style={styles.containerStyle}>
+                  <Text style={styles.titleText}>Coulomb's Law Simulator</Text>
                 </View>
 
-                <View style={styles.measurementContainer}>
-                  <Text style={styles.measurementTitle}>Object Measurements</Text>
+                <View style={styles.containerStyle}>
+                  <Text style={{ fontSize: 24, fontWeight: "bold" }}>Force Display</Text>
+                  <Text style={{ fontSize: 15 }}>Move the charges around to see the forces.</Text>
                   
-                  <View style={{ maxHeight: isMobile ? 180 : 400 }}>
-                    <ScrollView nestedScrollEnabled={true}>
-                      {forceData.map(f => (
-                        <View key={f.id} style={styles.objectMeasurement}>
-                          <Text style={{ fontSize: 15, fontWeight: "bold" }}>Object {f.id}</Text>
-                          <Text style={{ fontSize: 12 }}>Position : ({Math.round(f.x)} , {canvas ? Math.round(canvas.height - f.y - 20) : 0})</Text>
-                          <Text style={{ fontSize: 12 }}>Fx : {f.Fx.toExponential(2)} N , Fy : {f.Fy.toExponential(2)} N</Text>
-                          <Text style={{ fontSize: 12, fontWeight: 'bold' }}>|F| : {f.magnitude.toExponential(2)} N</Text>
-                        </View>
-                      ))}
-                    </ScrollView>
-                  </View>
-                  
-                  <Pressable 
-                    onPress={saveExperiment}
-                    style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.7 }]}
+                  <View 
+                    style={[styles.canvasStyle, isMobile && { height: 260 }]} 
+                    onLayout={(e) => setCanvas(e.nativeEvent.layout)}
                   >
-                    <Text style={styles.saveButtonText}>Save this experiment</Text>
-                  </Pressable>
-                </View>
-              </View>
+                    {canvas && (
+                      <>
+                        <Svg width={canvas.width} height={canvas.height} pointerEvents="none">
+                          {(() => {
+                            const spacing = 20;
+                            const lines = [];
+                            for (let x = 0; x < canvas.width; x += spacing) {
+                              lines.push(<SvgLine key={`v-${x}`} x1={x} y1={0} x2={x} y2={canvas.height} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />);
+                            }
+                            for (let y = 0; y < canvas.height; y += spacing) {
+                              lines.push(<SvgLine key={`h-${y}`} x1={0} y1={y} x2={canvas.width} y2={y} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />);
+                            }
+                            return lines;
+                          })()}
+                          {charges.map(c => (
+                            <SvgImage
+                              key={c.id}
+                              x={c.x} y={c.y}
+                              width={20} height={20}
+                              href={c.q > 0 ? require("../../assets/images/positive.png") : require("../../assets/images/negative.png")}
+                            />
+                          ))}
+                        </Svg>
+                        {charges.map(c => {
+                          const pan = Gesture.Pan()
+                            .onBegin(() => {
+                              setDragging(true);
+                              setCharges(prev => prev.map(ch => ch.id === c.id ? { ...ch, startX: ch.x, startY: ch.y } : ch));
+                            })
+                            .onUpdate(e => {
+                              if (!canvas) return;
+                              setCharges(prev => prev.map(ch => ch.id === c.id ? {
+                                ...ch,
+                                x: Math.max(0, Math.min(canvas.width - 20, (ch.startX ?? ch.x) + e.translationX)),
+                                y: Math.max(0, Math.min(canvas.height - 20, (ch.startY ?? ch.y) + e.translationY)),
+                              } : ch));
+                            })
+                            .onEnd(() => {
+                              setDragging(false);
+                              setCharges(prev => prev.map(ch => ch.id === c.id ? { ...ch, startX: undefined, startY: undefined } : ch));
+                            })
+                            .runOnJS(true);
+                          return (
+                            <GestureDetector key={c.id} gesture={pan}>
+                              <View style={{ position: "absolute", width: 30, height: 30, left: c.x - 5, top: c.y - 5 }} />
+                            </GestureDetector>
+                          );
+                        })}
+                      </>
+                    )}
+                  </View>
 
-              {showEField && <FieldPlot title="Electric Field" render={(w,h)=>renderElectric(w,h)} />}
-              {showPField && <FieldPlot title="Potential Field" render={(w,h)=>renderPotential(w,h)} />}
-            </View>
-
-            {/* right side */}
-            <View style={{ width: isLarge ? "56%" : "100%", paddingHorizontal: isMobile ? 0 : 8 }}>
-              <View style={styles.containerStyle}>
-                <View style={styles.headerRow}>
-                  <Text style={[styles.titleText, isMobile && { fontSize: 18 }]}>Add up to 5 objects</Text>
-                  <View style={styles.headerButtons}>
-                    <TouchableOpacity onPress={clearAll}>
-                      <Text style={styles.clearButtonText}>Clear All</Text>
-                    </TouchableOpacity>
-                    <Pressable onPress={addCard}>
-                      <RNImage source={require("../../assets/images/plus-butt.png")} style={styles.plusIcon} />
+                  <View style={styles.measurementContainer}>
+                    <Text style={styles.measurementTitle}>Object Measurements</Text>
+                    
+                    <View style={{ maxHeight: isMobile ? 180 : 400 }}>
+                      <ScrollView nestedScrollEnabled={true}>
+                        {forceData.map(f => (
+                          <View key={f.id} style={styles.objectMeasurement}>
+                            <Text style={{ fontSize: 15, fontWeight: "bold" }}>Object {f.id}</Text>
+                            <Text style={{ fontSize: 12 }}>Position : ({Math.round(f.x)} , {canvas ? Math.round(canvas.height - f.y - 20) : 0})</Text>
+                            <Text style={{ fontSize: 12 }}>Fx : {f.Fx.toExponential(2)} N , Fy : {f.Fy.toExponential(2)} N</Text>
+                            <Text style={{ fontSize: 12, fontWeight: 'bold' }}>|F| : {f.magnitude.toExponential(2)} N</Text>
+                          </View>
+                        ))}
+                      </ScrollView>
+                    </View>
+                    
+                    <Pressable 
+                      onPress={saveExperiment}
+                      style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.7 }]}
+                    >
+                      <Text style={styles.saveButtonText}>Save this experiment</Text>
                     </Pressable>
                   </View>
                 </View>
+
+                {showEField && <FieldPlot title="Electric Field" render={(w,h)=>renderElectric(w,h)} />}
+                {showPField && <FieldPlot title="Potential Field" render={(w,h)=>renderPotential(w,h)} />}
               </View>
 
-              {cards.map((c, index) => (
-                <View key={index} style={styles.containerStyle}>
+              {/* right side */}
+              <View style={{ width: isLarge ? "56%" : "100%", paddingHorizontal: isMobile ? 0 : 8 }}>
+                <View style={styles.containerStyle}>
                   <View style={styles.headerRow}>
-                    <Text style={styles.subtitleText}>Object {index + 1}</Text>
-                    <Pressable onPress={() => removeCard(index)}>
-                      <RNImage source={require("../../assets/images/x.png")} style={styles.xicon} />
-                    </Pressable>
-                  </View>
-                  <Text style={styles.chargeText}>
-                    Charge : <TextInput
-                      style={styles.textInputStyle}
-                      keyboardType="numeric"
-                      value={String(charges[index]?.q || '')}
-                      onChangeText={(text) => {
-                        if (text === '' || text === '-') {
-                          setCharges(prev => {
-                            const copy = [...prev];
-                            copy[index].q = text as any; 
-                            return copy;
-                          });
-                          return;
-                        }
-                        const num = parseFloat(text);
-                        if (!isNaN(num)) addCharge(index, num);
-                      }}
-                    /> nC
-                  </Text>
-                  <View style={styles.polarButtonSeparator}>
-                    <Text style={{ fontSize: 15 }}>Polarity :</Text>
-                    <Pressable onPress={() => changePolarity(index)}>
-                      <RNImage source={charges[index]?.q > 0 ? require("../../assets/images/positive.png") : require("../../assets/images/negative.png")} style={styles.polarButton} />
-                    </Pressable>
+                    <Text style={[styles.titleText, isMobile && { fontSize: 18 }]}>Add up to 5 objects</Text>
+                    <View style={styles.headerButtons}>
+                      <TouchableOpacity onPress={clearAll}>
+                        <Text style={styles.clearButtonText}>Clear All</Text>
+                      </TouchableOpacity>
+                      <Pressable onPress={addCard}>
+                        <RNImage source={require("../../assets/images/plus-butt.png")} style={styles.plusIcon} />
+                      </Pressable>
+                    </View>
                   </View>
                 </View>
-              ))}
 
-              <View style={styles.containerStyle}>
-                <View style={styles.toggleRow}>
-                  <Text style={styles.subtitleText}>Show Electric Fields :</Text>
-                  <Switch trackColor={{ false: "#c1c1c1", true: "#00ff0d" }} thumbColor={showEField ? "#009b08" : "#f4f3f4"} value={showEField} onValueChange={setShowEField} />
-                </View>
-                <View style={styles.toggleRow}>
-                  <Text style={styles.subtitleText}>Show Potential Fields :</Text>
-                  <Switch trackColor={{ false: "#c1c1c1", true: "#00ff0d" }} thumbColor={showPField ? "#009b08" : "#f4f3f4"} value={showPField} onValueChange={setShowPField} />
+                {cards.map((c, index) => (
+                  <View key={index} style={styles.containerStyle}>
+                    <View style={styles.headerRow}>
+                      <Text style={styles.subtitleText}>Object {index + 1}</Text>
+                      <Pressable onPress={() => removeCard(index)}>
+                        <RNImage source={require("../../assets/images/x.png")} style={styles.xicon} />
+                      </Pressable>
+                    </View>
+                    <Text style={styles.chargeText}>
+                      Charge : <TextInput
+                        style={styles.textInputStyle}
+                        keyboardType="numeric"
+                        value={String(charges[index]?.q || '')}
+                        onChangeText={(text) => {
+                          if (text === '' || text === '-') {
+                            setCharges(prev => {
+                              const copy = [...prev];
+                              copy[index].q = text as any; 
+                              return copy;
+                            });
+                            return;
+                          }
+                          const num = parseFloat(text);
+                          if (!isNaN(num)) addCharge(index, num);
+                        }}
+                      /> nC
+                    </Text>
+                    <View style={styles.polarButtonSeparator}>
+                      <Text style={{ fontSize: 15 }}>Polarity :</Text>
+                      <Pressable onPress={() => changePolarity(index)}>
+                        <RNImage source={charges[index]?.q > 0 ? require("../../assets/images/positive.png") : require("../../assets/images/negative.png")} style={styles.polarButton} />
+                      </Pressable>
+                    </View>
+                  </View>
+                ))}
+
+                <View style={styles.containerStyle}>
+                  <View style={styles.toggleRow}>
+                    <Text style={styles.subtitleText}>Show Electric Fields :</Text>
+                    <Switch trackColor={{ false: "#c1c1c1", true: "#00ff0d" }} thumbColor={showEField ? "#009b08" : "#f4f3f4"} value={showEField} onValueChange={setShowEField} />
+                  </View>
+                  <View style={styles.toggleRow}>
+                    <Text style={styles.subtitleText}>Show Potential Fields :</Text>
+                    <Switch trackColor={{ false: "#c1c1c1", true: "#00ff0d" }} thumbColor={showPField ? "#009b08" : "#f4f3f4"} value={showPField} onValueChange={setShowPField} />
+                  </View>
                 </View>
               </View>
             </View>
-          </SafeAreaView>
-        </ScrollView>
+          </ScrollView>
+        </View>
     </SafeAreaProvider>
   );
 }
