@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../../components/navbar'; 
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'; 
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'; 
 import { useRouter } from 'expo-router';
 
 export default function HistoryScreen() {
@@ -13,19 +13,17 @@ export default function HistoryScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
-  
-  const insets = useSafeAreaInsets(); 
 
   const fetchHistory = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser(); //
     
     if (user) {
       setIsLoggedIn(true);
       const { data, error } = await supabase
         .from('experiments')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id) // Memastikan data hanya milik user yang login
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -101,63 +99,60 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#f8f9fa" }}>
-      <View style={{ 
-        flex: 1, 
-        backgroundColor: "#f8f9fa",
-        marginBottom: Platform.OS === 'web' ? 0 : insets.bottom 
-      }}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa" }} edges={['top']}>
-          <Navbar />
-          
-          <View style={styles.contentWrapper}>
-            <View style={[
-              styles.listWrapper,
-              { maxWidth: isMobile ? '100%' : 900 }
-            ]}>
-              <Text style={[styles.title, isMobile && { fontSize: 24 }]}>
-                Experiment History
-              </Text>
-              
-              {loading && !refreshing ? (
-                <ActivityIndicator size="large" color="#002467" style={{ marginTop: 50 }} />
-              ) : (
-                <FlatList
-                  data={history}
-                  keyExtractor={(item) => item[0].id.toString()}
-                  renderItem={renderItem}
-                  contentContainerStyle={{ paddingBottom: 120 }}
-                  showsVerticalScrollIndicator={true}
-                  refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                  }
-                  ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                      {!isLoggedIn ? (
-                        <>
-                          <Text style={[styles.emptyText, { color: '#F44336' }]}>
-                            Please Login First
-                          </Text>
-                          <Text style={styles.emptySubText}>
-                            You need to be logged in to view your experiment history.
-                          </Text>
-                          <TouchableOpacity 
-                            style={styles.loginButton} 
-                            onPress={() => router.push('/(auth)/login')}
-                          >
-                            <Text style={styles.loginButtonText}>Go to Login</Text>
-                          </TouchableOpacity>
-                        </>
-                      ) : (
-                        <Text style={styles.emptyText}>No experiment history yet.</Text>
-                      )}
-                    </View>
-                  }
-                />
-              )}
-            </View>
+      {/* Menggunakan edges top dan bottom agar UI menghormati bar navigasi sistem HP secara otomatis */}
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa" }} edges={['top', 'bottom']}>
+        
+        {/* Navbar diposisikan di atas agar tidak bertabrakan dengan navigasi bawah HP */}
+        <Navbar />
+        
+        <View style={styles.contentWrapper}>
+          <View style={[
+            styles.listWrapper,
+            { maxWidth: isMobile ? '100%' : 900 }
+          ]}>
+            <Text style={[styles.title, isMobile && { fontSize: 24 }]}>
+              Experiment History
+            </Text>
+            
+            {loading && !refreshing ? (
+              <ActivityIndicator size="large" color="#002467" style={{ marginTop: 50 }} />
+            ) : (
+              <FlatList
+                data={history}
+                keyExtractor={(item) => item[0].id.toString()}
+                renderItem={renderItem}
+                contentContainerStyle={{ paddingBottom: 40 }} // Padding secukupnya karena sudah dijaga edges bottom
+                showsVerticalScrollIndicator={true}
+                refreshControl={
+                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                ListEmptyComponent={
+                  <View style={styles.emptyState}>
+                    {!isLoggedIn ? (
+                      <>
+                        <Text style={[styles.emptyText, { color: '#F44336' }]}>
+                          Please Login First
+                        </Text>
+                        <Text style={styles.emptySubText}>
+                          You need to be logged in to view your experiment history.
+                        </Text>
+                        <TouchableOpacity 
+                          style={styles.loginButton} 
+                          onPress={() => router.push('/(auth)/login')}
+                        >
+                          <Text style={styles.loginButtonText}>Go to Login</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <Text style={styles.emptyText}>No experiment history yet.</Text>
+                    )}
+                  </View>
+                }
+              />
+            )}
           </View>
-        </SafeAreaView>
-      </View>
+        </View>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }
