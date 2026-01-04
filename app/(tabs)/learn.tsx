@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, useWindowDimensions, Platform, TouchableOpacity } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import YoutubePlayer from "react-native-youtube-iframe";
 import Navbar from '../../components/navbar';
 
@@ -46,6 +46,7 @@ export default function Learn() {
   const isLarge = width > 1000;
   const isMobile = width < 768;
   const videoId = "kCp5yYjo9zE"; 
+  const insets = useSafeAreaInsets();
 
   const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
   const [score, setScore] = useState(0);
@@ -88,87 +89,93 @@ export default function Learn() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#EEEEEE" }}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEE" }} edges={['top', 'bottom']}>
-        <Navbar />
+      <View style={{ 
+        flex: 1, 
+        backgroundColor: "#EEEEEE",
+        paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom 
+      }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEE" }} edges={['top']}>
+          <Navbar />
 
-        <ScrollView contentContainerStyle={{ 
-          paddingBottom: 40,
-          alignItems: 'center',
-        }}>
-          <View style={[
-            styles.mainWrapper, 
-            { 
-              width: isLarge ? "60%" : "100%",
-              maxWidth: 900,
-              paddingHorizontal: isMobile ? 16 : 0,
-            }
-          ]}>
-            
-            <View style={styles.containerStyle}>
-              <Text style={styles.titleText}>Learn: Coulomb's Law</Text>
-              <Text style={styles.description}>Understand point charge interactions through the video and quiz below.</Text>
-            </View>
-
-            <View style={styles.videoCard}>
-              <View style={styles.videoWrapper}>{renderVideo()}</View>
-            </View>
-
-            <View style={styles.scoreCard}>
-              <View>
-                <Text style={styles.quizTitle}>Knowledge Check</Text>
-                <Text style={styles.scoreLabel}>Your Score:</Text>
-                <Text style={styles.scoreValue}>{score} / {quizData.length}</Text>
-              </View>
+          <ScrollView contentContainerStyle={{ 
+            paddingBottom: 40,
+            alignItems: 'center',
+          }}>
+            <View style={[
+              styles.mainWrapper, 
+              { 
+                width: isLarge ? "60%" : "100%",
+                maxWidth: 900,
+                paddingHorizontal: isMobile ? 16 : 0,
+              }
+            ]}>
               
-              {Object.keys(userAnswers).length > 0 && (
-                <TouchableOpacity 
-                  onPress={retakeQuiz}
-                  style={styles.retakeButton}
-                >
-                  <Text style={styles.retakeButtonText}>Retake Quiz</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+              <View style={styles.containerStyle}>
+                <Text style={styles.titleText}>Learn: Coulomb's Law</Text>
+                <Text style={styles.description}>Understand point charge interactions through the video and quiz below.</Text>
+              </View>
 
-            {quizData.map((quiz) => (
-              <View key={quiz.id} style={styles.containerStyle}>
-                <Text style={styles.quizQuestion}>{quiz.id}. {quiz.question}</Text>
-                <View style={styles.optionContainer}>
-                  {quiz.options.map((option, index) => {
-                    const isSelected = userAnswers[quiz.id] === index;
-                    const isCorrect = quiz.correctIndex === index;
-                    const hasAnswered = userAnswers[quiz.id] !== undefined;
+              <View style={styles.videoCard}>
+                <View style={styles.videoWrapper}>{renderVideo()}</View>
+              </View>
 
-                    return (
-                      <TouchableOpacity
-                        key={index}
-                        onPress={() => handleAnswer(quiz.id, index, quiz.correctIndex)}
-                        disabled={hasAnswered}
-                        style={[
-                          styles.quizOption,
-                          hasAnswered && isCorrect && styles.correctOption,
-                          isSelected && !isCorrect && styles.wrongOption
-                        ]}
-                      >
-                        <Text style={[styles.optionText, hasAnswered && (isCorrect || isSelected) && { color: 'white' }]}>
-                          {String.fromCharCode(65 + index)}. {option}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+              <View style={styles.scoreCard}>
+                <View>
+                  <Text style={styles.quizTitle}>Knowledge Check</Text>
+                  <Text style={styles.scoreLabel}>Your Score:</Text>
+                  <Text style={styles.scoreValue}>{score} / {quizData.length}</Text>
                 </View>
-
-                {userAnswers[quiz.id] !== undefined && (
-                  <View style={styles.explanationBox}>
-                    <Text style={styles.explanationTitle}>Explanation:</Text>
-                    <Text style={styles.explanationText}>{quiz.explanation}</Text>
-                  </View>
+                
+                {Object.keys(userAnswers).length > 0 && (
+                  <TouchableOpacity 
+                    onPress={retakeQuiz}
+                    style={styles.retakeButton}
+                  >
+                    <Text style={styles.retakeButtonText}>Retake Quiz</Text>
+                  </TouchableOpacity>
                 )}
               </View>
-            ))}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+
+              {quizData.map((quiz) => (
+                <View key={quiz.id} style={styles.containerStyle}>
+                  <Text style={styles.quizQuestion}>{quiz.id}. {quiz.question}</Text>
+                  <View style={styles.optionContainer}>
+                    {quiz.options.map((option, index) => {
+                      const isSelected = userAnswers[quiz.id] === index;
+                      const isCorrect = quiz.correctIndex === index;
+                      const hasAnswered = userAnswers[quiz.id] !== undefined;
+
+                      return (
+                        <TouchableOpacity
+                          key={index}
+                          onPress={() => handleAnswer(quiz.id, index, quiz.correctIndex)}
+                          disabled={hasAnswered}
+                          style={[
+                            styles.quizOption,
+                            hasAnswered && isCorrect && styles.correctOption,
+                            isSelected && !isCorrect && styles.wrongOption
+                          ]}
+                        >
+                          <Text style={[styles.optionText, hasAnswered && (isCorrect || isSelected) && { color: 'white' }]}>
+                            {String.fromCharCode(65 + index)}. {option}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {userAnswers[quiz.id] !== undefined && (
+                    <View style={styles.explanationBox}>
+                      <Text style={styles.explanationTitle}>Explanation:</Text>
+                      <Text style={styles.explanationText}>{quiz.explanation}</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </SafeAreaProvider>
   );
 }

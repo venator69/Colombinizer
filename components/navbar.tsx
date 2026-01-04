@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
 import { Ionicons } from '@expo/vector-icons';
 
 export default function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Untuk Dropdown Mobile (Ikon Akun)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Untuk Dropdown Desktop
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); 
   const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  
+  const isWeb = Platform.OS === 'web';
+  const isMobileSize = width < 768;
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -41,18 +43,8 @@ export default function Navbar() {
     <View style={styles.navContainer}>
       <View style={styles.nav}>
         <Text style={styles.logo}>Colombinizer</Text>
-
-        {isMobile ? (
-          /* Mobile */
-          <TouchableOpacity onPress={() => setIsMenuOpen(!isMenuOpen)} style={styles.accountIcon}>
-            <Ionicons 
-              name={email ? "person-circle" : "person-circle-outline"} 
-              size={32} 
-              color="white" 
-            />
-          </TouchableOpacity>
-        ) : (
-          /* Desktop */
+        
+        {isWeb ? (
           <View style={styles.menu}>
             <TouchableOpacity onPress={() => navigateTo("/(tabs)/home")}><Text style={styles.menuText}>Home</Text></TouchableOpacity>
             <TouchableOpacity onPress={() => navigateTo("/(tabs)/learn")}><Text style={styles.menuText}>Learn</Text></TouchableOpacity>
@@ -85,10 +77,19 @@ export default function Navbar() {
               </TouchableOpacity>
             )}
           </View>
+        ) : (
+          <TouchableOpacity onPress={() => setIsMenuOpen(!isMenuOpen)} style={styles.accountIcon}>
+            <Ionicons 
+              name={email ? "person-circle" : "person-circle-outline"} 
+              size={32} 
+              color="white" 
+            />
+          </TouchableOpacity>
         )}
       </View>
 
-      {isMobile && isMenuOpen && (
+      {/* Dropdown Mobile App */}
+      {!isWeb && isMenuOpen && (
         <View style={styles.mobileDropdown}>
           {email ? (
             <View>
@@ -116,16 +117,15 @@ const styles = StyleSheet.create({
   navContainer: { width: "100%", zIndex: 100 },
   nav: { height: 70, backgroundColor: "#002467", flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20 },
   logo: { color: "white", fontSize: 20, fontWeight: "bold" },
-  menu: { flexDirection: "row", gap: 20, alignItems: "center" },
-  menuText: { color: "white", fontSize: 16 },
+  menu: { flexDirection: "row", gap: 15, alignItems: "center" },
+  menuText: { color: "white", fontSize: 14 },
   
-  // User Button & Dropdown Desktop
   userButton: {
     backgroundColor: "rgba(255,255,255,0.1)",
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
-    marginLeft: 10,
+    marginLeft: 5,
   },
   dropdown: {
     position: "absolute",
@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: 150,
     elevation: 5,
+    zIndex: 200,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -142,10 +143,7 @@ const styles = StyleSheet.create({
   },
   dropdownItem: { padding: 12, alignItems: "center" },
   logoutText: { color: "#ff4444", fontWeight: "bold" },
-
-  // Mobile Account Icon
   accountIcon: { padding: 5 },
-
   mobileDropdown: { 
     position: 'absolute', 
     top: 65, 
@@ -155,6 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: 220,
     elevation: 10,
+    zIndex: 200,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -165,7 +164,5 @@ const styles = StyleSheet.create({
   separator: { height: 1, backgroundColor: "#eee", marginVertical: 8 },
   dropdownItemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 },
   dropdownItemText: { fontSize: 16, fontWeight: '500' },
-  
-  // Login Button Desktop
   loginBtn: { paddingHorizontal: 15, paddingVertical: 6, borderRadius: 20, marginLeft: 10 }
 });
