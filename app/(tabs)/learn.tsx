@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, useWindowDimensions, Platform, TouchableOpacity } from 'react-native';
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import YoutubePlayer from "react-native-youtube-iframe";
 import Navbar from '../../components/navbar';
 
@@ -46,7 +46,6 @@ export default function Learn() {
   const isLarge = width > 1000;
   const isMobile = width < 768;
   const videoId = "kCp5yYjo9zE"; 
-  const insets = useSafeAreaInsets();
 
   const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
   const [score, setScore] = useState(0);
@@ -89,16 +88,12 @@ export default function Learn() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#EEEEEE" }}>
-      <View style={{ 
-        flex: 1, 
-        backgroundColor: "#EEEEEE",
-        paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom 
-      }}>
+      <View style={{ flex: 1, backgroundColor: "#EEEEEE" }}>
         <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEE" }} edges={['top']}>
           <Navbar />
 
           <ScrollView contentContainerStyle={{ 
-            paddingBottom: 40,
+            paddingBottom: 20, 
             alignItems: 'center',
           }}>
             <View style={[

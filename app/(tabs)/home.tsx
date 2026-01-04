@@ -1,30 +1,26 @@
 import {Image as RNImage, StyleSheet, View, Text, ScrollView, useWindowDimensions, Platform} from "react-native";
 import Navbar from "../../components/navbar";
 import { useState } from "react";
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
   const [dragging, setDragging] = useState(false);
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
   const isWeb = Platform.OS === 'web';
-  const insets = useSafeAreaInsets();
 
   return (    
   <SafeAreaProvider style={{ backgroundColor: "#EEEEEEff" }}>
-    <View style={{ 
-      flex: 1, 
-      backgroundColor: "#EEEEEEff",
-      paddingBottom: isWeb ? 0 : insets.bottom 
-    }}>
+    <View style={{ flex: 1, backgroundColor: "#EEEEEEff" }}>
+      
       <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEEff" }} edges={['top']}>
         
         <Navbar />
 
         <ScrollView
           scrollEnabled={!dragging}
-          contentContainerStyle={{ 
-            paddingBottom: isWeb ? 40 : 120, 
+          contentContainerStyle={{
+            paddingBottom: 20, 
             alignItems: "center",
           }}
         >

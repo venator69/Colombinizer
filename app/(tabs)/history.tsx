@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../../components/navbar'; 
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'; 
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'; 
 import { useRouter } from 'expo-router';
 
 export default function HistoryScreen() {
@@ -13,8 +13,6 @@ export default function HistoryScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
-  
-  const insets = useSafeAreaInsets(); 
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -101,15 +99,9 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#f8f9fa" }}>
-      {/* WRAPPER UTAMA: Mengangkat konten dari tombol navigasi HP */}
-      <View style={{ 
-        flex: 1, 
-        backgroundColor: "#f8f9fa",
-        paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom 
-      }}>
+      <View style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
         <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa" }} edges={['top']}>
           
-          {/* Navbar tetap di ATAS */}
           <Navbar />
           
           <View style={styles.contentWrapper}>
@@ -128,7 +120,7 @@ export default function HistoryScreen() {
                   data={history}
                   keyExtractor={(item) => item[0].id.toString()}
                   renderItem={renderItem}
-                  contentContainerStyle={{ paddingBottom: 40 }}
+                  contentContainerStyle={{ paddingBottom: 20 }}
                   showsVerticalScrollIndicator={true}
                   refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

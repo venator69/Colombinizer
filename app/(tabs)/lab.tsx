@@ -1,7 +1,7 @@
 import {StyleSheet, View, Text, ScrollView, Pressable, Image as RNImage, Switch, TextInput, useWindowDimensions, TouchableOpacity, Platform} from "react-native";
 import Svg, { Line as SvgLine, Rect as SvgRect, Image as SvgImage } from "react-native-svg";
 import React, { useState } from "react";
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Navbar from "../../components/navbar";
 import CustomAlert from "../../components/alert";
@@ -54,7 +54,6 @@ function FieldPlot({
 
 export default function App() {
   const router = useRouter();
-  const insets = useSafeAreaInsets(); // Untuk mengambil insets navigasi sistem
 
   // states
   const [cards, setCards] = useState<number[]>([]);
@@ -295,15 +294,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#EEEEEEff" }}>
-      {/* Wrapper Utama: Memberikan padding bawah agar tidak tertutup tombol navigasi HP */}
-      <View style={{ 
-        flex: 1, 
-        backgroundColor: "#EEEEEEff",
-        paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom 
-      }}>
-        {/* SafeAreaView edges top memastikan konten tidak tertutup status bar */}
+      <View style={{ flex: 1, backgroundColor: "#EEEEEEff" }}>
         <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEEff" }} edges={['top']}>
-          {/* Navbar tetap konsisten di posisi atas */}
           <Navbar />
           
           <CustomAlert
@@ -317,7 +309,9 @@ export default function App() {
 
           <ScrollView
             scrollEnabled={!dragging}
-            contentContainerStyle={{ paddingBottom: 40 }}
+            contentContainerStyle={{ 
+              paddingBottom: 20 
+            }}
           >
             <View
               style={{
