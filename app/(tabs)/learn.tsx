@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, useWindowDimensions, Platform, TouchableOpacity } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import YoutubePlayer from "react-native-youtube-iframe";
 import Navbar from '../../components/navbar';
 
@@ -45,7 +45,8 @@ export default function Learn() {
   const { width } = useWindowDimensions();
   const isLarge = width > 1000;
   const isMobile = width < 768;
-  const videoId = "kCp5yYjo9zE"; // ID Video YouTube
+  const videoId = "kCp5yYjo9zE"; 
+  const insets = useSafeAreaInsets(); //
 
   const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
   const [score, setScore] = useState(0);
@@ -59,9 +60,7 @@ export default function Learn() {
 
   const handleAnswer = (questionId: number, index: number, correctIndex: number) => {
     if (userAnswers[questionId] !== undefined) return;
-    
     setUserAnswers(prev => ({ ...prev, [questionId]: index }));
-    
     if (index === correctIndex) {
       setScore(prevScore => prevScore + 1);
     }
@@ -90,234 +89,117 @@ export default function Learn() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#EEEEEE" }}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEE" }} edges={['top']}>
-        <Navbar />
+      <View style={{ 
+        flex: 1, 
+        backgroundColor: "#EEEEEE",
+        paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom 
+      }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEE" }} edges={['top']}>
+          <Navbar />
 
-        <ScrollView contentContainerStyle={{ 
-          paddingBottom: 120,
-          alignItems: 'center',
-        }}>
-          <View style={[
-            styles.mainWrapper, 
-            { 
-              width: isLarge ? "60%" : "100%",
-              maxWidth: 900,
-              paddingHorizontal: isMobile ? 16 : 0,
-            }
-          ]}>
-            
-            {/* Header Section */}
-            <View style={styles.containerStyle}>
-              <Text style={styles.titleText}>Learn: Coulomb's Law</Text>
-              <Text style={styles.description}>Understand point charge interactions through the video and quiz below.</Text>
-            </View>
-
-            {/* Video Player Section */}
-            <View style={styles.videoCard}>
-              <View style={styles.videoWrapper}>{renderVideo()}</View>
-            </View>
-
-            {/* Score Section */}
-            <View style={styles.scoreCard}>
-              <View>
-                <Text style={styles.quizTitle}>Knowledge Check</Text>
-                <Text style={styles.scoreLabel}>Your Score:</Text>
-                <Text style={styles.scoreValue}>{score} / {quizData.length}</Text>
-              </View>
+          <ScrollView contentContainerStyle={{ 
+            paddingBottom: 120,
+            alignItems: 'center',
+          }}>
+            <View style={[
+              styles.mainWrapper, 
+              { 
+                width: isLarge ? "60%" : "100%",
+                maxWidth: 900,
+                paddingHorizontal: isMobile ? 16 : 0,
+              }
+            ]}>
               
-              {Object.keys(userAnswers).length > 0 && (
-                <TouchableOpacity 
-                  onPress={retakeQuiz}
-                  style={styles.retakeButton}
-                >
-                  <Text style={styles.retakeButtonText}>Retake Quiz</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+              <View style={styles.containerStyle}>
+                <Text style={styles.titleText}>Learn: Coulomb's Law</Text>
+                <Text style={styles.description}>Understand point charge interactions through the video and quiz below.</Text>
+              </View>
 
-            {/* Quiz Section */}
-            {quizData.map((quiz) => (
-              <View key={quiz.id} style={styles.containerStyle}>
-                <Text style={styles.quizQuestion}>{quiz.id}. {quiz.question}</Text>
-                
-                <View style={styles.optionContainer}>
-                  {quiz.options.map((option, index) => {
-                    const isSelected = userAnswers[quiz.id] === index;
-                    const isCorrect = quiz.correctIndex === index;
-                    const hasAnswered = userAnswers[quiz.id] !== undefined;
+              <View style={styles.videoCard}>
+                <View style={styles.videoWrapper}>{renderVideo()}</View>
+              </View>
 
-                    return (
-                      <TouchableOpacity
-                        key={index}
-                        onPress={() => handleAnswer(quiz.id, index, quiz.correctIndex)}
-                        disabled={hasAnswered}
-                        style={[
-                          styles.quizOption,
-                          hasAnswered && isCorrect && styles.correctOption,
-                          isSelected && !isCorrect && styles.wrongOption
-                        ]}
-                      >
-                        <Text style={[styles.optionText, hasAnswered && (isCorrect || isSelected) && { color: 'white' }]}>
-                          {String.fromCharCode(65 + index)}. {option}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+              <View style={styles.scoreCard}>
+                <View>
+                  <Text style={styles.quizTitle}>Knowledge Check</Text>
+                  <Text style={styles.scoreLabel}>Your Score:</Text>
+                  <Text style={styles.scoreValue}>{score} / {quizData.length}</Text>
                 </View>
-
-                {userAnswers[quiz.id] !== undefined && (
-                  <View style={styles.explanationBox}>
-                    <Text style={styles.explanationTitle}>Explanation:</Text>
-                    <Text style={styles.explanationText}>{quiz.explanation}</Text>
-                  </View>
+                
+                {Object.keys(userAnswers).length > 0 && (
+                  <TouchableOpacity 
+                    onPress={retakeQuiz}
+                    style={styles.retakeButton}
+                  >
+                    <Text style={styles.retakeButtonText}>Retake Quiz</Text>
+                  </TouchableOpacity>
                 )}
               </View>
-            ))}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+
+              {quizData.map((quiz) => (
+                <View key={quiz.id} style={styles.containerStyle}>
+                  <Text style={styles.quizQuestion}>{quiz.id}. {quiz.question}</Text>
+                  <View style={styles.optionContainer}>
+                    {quiz.options.map((option, index) => {
+                      const isSelected = userAnswers[quiz.id] === index;
+                      const isCorrect = quiz.correctIndex === index;
+                      const hasAnswered = userAnswers[quiz.id] !== undefined;
+
+                      return (
+                        <TouchableOpacity
+                          key={index}
+                          onPress={() => handleAnswer(quiz.id, index, quiz.correctIndex)}
+                          disabled={hasAnswered}
+                          style={[
+                            styles.quizOption,
+                            hasAnswered && isCorrect && styles.correctOption,
+                            isSelected && !isCorrect && styles.wrongOption
+                          ]}
+                        >
+                          <Text style={[styles.optionText, hasAnswered && (isCorrect || isSelected) && { color: 'white' }]}>
+                            {String.fromCharCode(65 + index)}. {option}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {userAnswers[quiz.id] !== undefined && (
+                    <View style={styles.explanationBox}>
+                      <Text style={styles.explanationTitle}>Explanation:</Text>
+                      <Text style={styles.explanationText}>{quiz.explanation}</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  mainWrapper: { 
-    alignItems: 'center', 
-    width: '100%' 
-  },
-  containerStyle: {
-    marginVertical: 12,
-    padding: 16,
-    borderRadius: 16,
-    backgroundColor: "white",
-    elevation: 5,
-    width: '100%',
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  videoCard: { 
-    marginVertical: 12,
-    borderRadius: 16, 
-    backgroundColor: "black", 
-    elevation: 5, 
-    overflow: 'hidden', 
-    width: '100%',
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-  },
-  videoWrapper: { 
-    width: '100%', 
-    aspectRatio: 16 / 9 
-  },
-  titleText: { 
-    fontSize: 24, 
-    fontWeight: "bold", 
-    color: "#002467",
-    marginBottom: 8,
-  },
-  description: { 
-    fontSize: 15, 
-    color: "#444", 
-    lineHeight: 22,
-  },
-  
-  scoreCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#002467',
-    padding: 20,
-    borderRadius: 16,
-    width: '100%',
-    marginVertical: 12,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-  },
-  quizTitle: { 
-    color: '#FF9800', 
-    fontSize: 14, 
-    fontWeight: 'bold', 
-    textTransform: 'uppercase', 
-    marginBottom: 5 
-  },
-  scoreLabel: { 
-    color: 'white', 
-    fontSize: 18, 
-    fontWeight: 'bold' 
-  },
-  scoreValue: { 
-    color: 'white', 
-    fontSize: 24, 
-    fontWeight: 'bold' 
-  },
-
-  quizQuestion: { 
-    fontSize: 16, 
-    fontWeight: '700', 
-    marginBottom: 15, 
-    color: '#333',
-    lineHeight: 24,
-  },
-  optionContainer: { 
-    gap: 10 
-  },
-  quizOption: { 
-    padding: 14, 
-    backgroundColor: 'white', 
-    borderRadius: 10, 
-    borderWidth: 2, 
-    borderColor: '#e0e0e0' 
-  },
-  correctOption: { 
-    backgroundColor: '#4CAF50', 
-    borderColor: '#4CAF50' 
-  },
-  wrongOption: { 
-    backgroundColor: '#F44336', 
-    borderColor: '#F44336' 
-  },
-  optionText: { 
-    fontSize: 14, 
-    color: '#333',
-    lineHeight: 20,
-  },
-  explanationBox: { 
-    marginTop: 15, 
-    padding: 14, 
-    backgroundColor: '#E3F2FD', 
-    borderRadius: 10, 
-    borderLeftWidth: 4, 
-    borderLeftColor: '#2196F3' 
-  },
-  explanationTitle: { 
-    fontWeight: 'bold', 
-    color: '#1565C0', 
-    marginBottom: 6,
-    fontSize: 14,
-  },
-  explanationText: { 
-    fontSize: 14, 
-    color: '#444', 
-    lineHeight: 20 
-  },
-
-  retakeButton: { 
-    backgroundColor: '#FF9800', 
-    paddingVertical: 10, 
-    paddingHorizontal: 18, 
-    borderRadius: 10,
-    elevation: 2,
-  },
-  retakeButtonText: { 
-    color: 'white', 
-    fontWeight: 'bold', 
-    fontSize: 14
-  }
+  mainWrapper: { alignItems: 'center', width: '100%' },
+  containerStyle: { marginVertical: 12, padding: 16, borderRadius: 16, backgroundColor: "white", elevation: 5, width: '100%' },
+  videoCard: { marginVertical: 12, borderRadius: 16, backgroundColor: "black", elevation: 5, overflow: 'hidden', width: '100%' },
+  videoWrapper: { width: '100%', aspectRatio: 16 / 9 },
+  titleText: { fontSize: 24, fontWeight: "bold", color: "#002467", marginBottom: 8 },
+  description: { fontSize: 15, color: "#444", lineHeight: 22 },
+  scoreCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#002467', padding: 20, borderRadius: 16, width: '100%', marginVertical: 12, elevation: 5 },
+  quizTitle: { color: '#FF9800', fontSize: 14, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 5 },
+  scoreLabel: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  scoreValue: { color: 'white', fontSize: 24, fontWeight: 'bold' },
+  quizQuestion: { fontSize: 16, fontWeight: '700', marginBottom: 15, color: '#333', lineHeight: 24 },
+  optionContainer: { gap: 10 },
+  quizOption: { padding: 14, backgroundColor: 'white', borderRadius: 10, borderWidth: 2, borderColor: '#e0e0e0' },
+  correctOption: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
+  wrongOption: { backgroundColor: '#F44336', borderColor: '#F44336' },
+  optionText: { fontSize: 14, color: '#333', lineHeight: 20 },
+  explanationBox: { marginTop: 15, padding: 14, backgroundColor: '#E3F2FD', borderRadius: 10, borderLeftWidth: 4, borderLeftColor: '#2196F3' },
+  explanationTitle: { fontWeight: 'bold', color: '#1565C0', marginBottom: 6, fontSize: 14 },
+  explanationText: { fontSize: 14, color: '#444', lineHeight: 20 },
+  retakeButton: { backgroundColor: '#FF9800', paddingVertical: 10, paddingHorizontal: 18, borderRadius: 10, elevation: 2 },
+  retakeButtonText: { color: 'white', fontWeight: 'bold', fontSize: 14 }
 });

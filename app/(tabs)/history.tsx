@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import Navbar from '../../components/navbar'; 
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useRouter } from 'expo-router';
 
 export default function HistoryScreen() {
@@ -13,11 +13,12 @@ export default function HistoryScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
-  const insets = useSafeAreaInsets();
+  
+  const insets = useSafeAreaInsets(); 
 
   const fetchHistory = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser(); //
+    const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
       setIsLoggedIn(true);
@@ -100,117 +101,79 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#f8f9fa" }}>
-      <View style={[
-        styles.mainWrapper, 
-        { paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom }
-      ]}>
-        
-        {Platform.OS === 'web' && <Navbar />}
-        
-        <View style={styles.contentWrapper}>
-          <View style={[
-            styles.listWrapper,
-            { maxWidth: isMobile ? '100%' : 900 }
-          ]}>
-            <Text style={[styles.title, isMobile && { fontSize: 24 }]}>
-              Experiment History
-            </Text>
-            
-            {loading && !refreshing ? (
-              <ActivityIndicator size="large" color="#002467" style={{ marginTop: 50 }} />
-            ) : (
-              <FlatList
-                data={history}
-                keyExtractor={(item) => item[0].id.toString()}
-                renderItem={renderItem}
-                contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 40 : 150 }} 
-                refreshControl={
-                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-                ListEmptyComponent={
-                  <View style={styles.emptyState}>
-                    {!isLoggedIn ? (
-                      <>
-                        <Text style={[styles.emptyText, { color: '#F44336' }]}>Please Login First</Text>
-                        <TouchableOpacity 
-                          style={styles.loginButton} 
-                          onPress={() => router.push('/(auth)/login')}
-                        >
-                          <Text style={styles.loginButtonText}>Go to Login</Text>
-                        </TouchableOpacity>
-                      </>
-                    ) : (
-                      <Text style={styles.emptyText}>No experiment history yet.</Text>
-                    )}
-                  </View>
-                }
-              />
-            )}
+      <View style={{ 
+        flex: 1, 
+        backgroundColor: "#f8f9fa",
+        marginBottom: Platform.OS === 'web' ? 0 : insets.bottom 
+      }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa" }} edges={['top']}>
+          <Navbar />
+          
+          <View style={styles.contentWrapper}>
+            <View style={[
+              styles.listWrapper,
+              { maxWidth: isMobile ? '100%' : 900 }
+            ]}>
+              <Text style={[styles.title, isMobile && { fontSize: 24 }]}>
+                Experiment History
+              </Text>
+              
+              {loading && !refreshing ? (
+                <ActivityIndicator size="large" color="#002467" style={{ marginTop: 50 }} />
+              ) : (
+                <FlatList
+                  data={history}
+                  keyExtractor={(item) => item[0].id.toString()}
+                  renderItem={renderItem}
+                  contentContainerStyle={{ paddingBottom: 120 }}
+                  showsVerticalScrollIndicator={true}
+                  refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                  }
+                  ListEmptyComponent={
+                    <View style={styles.emptyState}>
+                      {!isLoggedIn ? (
+                        <>
+                          <Text style={[styles.emptyText, { color: '#F44336' }]}>
+                            Please Login First
+                          </Text>
+                          <Text style={styles.emptySubText}>
+                            You need to be logged in to view your experiment history.
+                          </Text>
+                          <TouchableOpacity 
+                            style={styles.loginButton} 
+                            onPress={() => router.push('/(auth)/login')}
+                          >
+                            <Text style={styles.loginButtonText}>Go to Login</Text>
+                          </TouchableOpacity>
+                        </>
+                      ) : (
+                        <Text style={styles.emptyText}>No experiment history yet.</Text>
+                      )}
+                    </View>
+                  }
+                />
+              )}
+            </View>
           </View>
-        </View>
-
-        {Platform.OS !== 'web' && <Navbar />}
-        
+        </SafeAreaView>
       </View>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  mainWrapper: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  contentWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    width: '100%',
-  },
-  listWrapper: { 
-    flex: 1,
-    width: '100%',
-    paddingHorizontal: 20,
-  },
-  title: { 
-    fontSize: 28, 
-    fontWeight: 'bold', 
-    marginVertical: 20, 
-    color: '#002467',
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 15,
-  },
+  contentWrapper: { flex: 1, alignItems: 'center', width: '100%' },
+  listWrapper: { flex: 1, width: '100%', paddingHorizontal: 20 },
+  title: { fontSize: 28, fontWeight: 'bold', marginVertical: 20, color: '#002467' },
+  card: { backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 16, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 15, flexWrap: 'wrap', gap: 8 },
   experimentLabel: { fontSize: 14, fontWeight: '600', color: '#666' },
   dateText: { fontSize: 12, color: '#999', marginTop: 2 },
   objectBadge: { backgroundColor: '#e3f2fd', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   objectBadgeText: { color: '#1976d2', fontSize: 12, fontWeight: 'bold' },
-  summaryBox: {
-    backgroundColor: '#f1f3f5',
-    borderRadius: 12,
-    padding: 12,
-  },
-  objRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
+  summaryBox: { backgroundColor: '#f1f3f5', borderRadius: 12, padding: 12 },
+  objRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#e9ecef' },
   objInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   dot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   objLabel: { fontSize: 14, color: '#444', flex: 1 },
@@ -219,12 +182,7 @@ const styles = StyleSheet.create({
   insightText: { fontSize: 13, color: '#555', fontStyle: 'italic', lineHeight: 18 },
   emptyState: { alignItems: 'center', marginTop: 100, paddingHorizontal: 20 },
   emptyText: { fontSize: 18, fontWeight: 'bold', color: '#adb5bd', textAlign: 'center' },
-  loginButton: {
-    marginTop: 20,
-    backgroundColor: '#002467',
-    paddingHorizontal: 25,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
+  emptySubText: { color: '#ced4da', marginTop: 8, textAlign: 'center', lineHeight: 20 },
+  loginButton: { marginTop: 20, backgroundColor: '#002467', paddingHorizontal: 25, paddingVertical: 12, borderRadius: 10, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
   loginButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
 });
