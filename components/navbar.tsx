@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../lib/supabase";
-import { Ionicons } from '@expo/vector-icons'; // Import ikon
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Navbar() {
   const [email, setEmail] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export default function Navbar() {
         <Text style={styles.logo}>Colombinizer</Text>
 
         {isMobile ? (
-          /* Mobile - Diganti dari Hamburger ke Ikon Profil */
+          /* Mobile */
           <TouchableOpacity onPress={() => setIsMenuOpen(!isMenuOpen)} style={styles.accountIcon}>
             <Ionicons 
               name={email ? "person-circle" : "person-circle-outline"} 
@@ -52,7 +52,7 @@ export default function Navbar() {
             />
           </TouchableOpacity>
         ) : (
-          /* Desktop - Tetap Sama */
+          /* Desktop */
           <View style={styles.menu}>
             <TouchableOpacity onPress={() => navigateTo("/(tabs)/home")}><Text style={styles.menuText}>Home</Text></TouchableOpacity>
             <TouchableOpacity onPress={() => navigateTo("/(tabs)/learn")}><Text style={styles.menuText}>Learn</Text></TouchableOpacity>
@@ -88,7 +88,6 @@ export default function Navbar() {
         )}
       </View>
 
-      {/* Dropdown Mobile - Diposisikan melayang di kanan atas tepat di bawah ikon */}
       {isMobile && isMenuOpen && (
         <View style={styles.mobileDropdown}>
           {email ? (
@@ -147,7 +146,6 @@ const styles = StyleSheet.create({
   // Mobile Account Icon
   accountIcon: { padding: 5 },
 
-  // Perbaikan Dropdown Mobile agar melayang di pojok kanan bawah ikon
   mobileDropdown: { 
     position: 'absolute', 
     top: 65, 

@@ -9,17 +9,14 @@ export default function Home() {
   const isMobile = width < 768;
 
   return (    
-  <SafeAreaProvider
-    style={{ backgroundColor: "#EEEEEEff" }}>
-    
-      <SafeAreaView style={{ flex: 0, backgroundColor: "transparent" }} />
-
+  <SafeAreaProvider style={{ backgroundColor: "#EEEEEEff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEEff" }} edges={['top']}>
       <Navbar />
 
       <ScrollView
         scrollEnabled={!dragging}
         contentContainerStyle={{ 
-          paddingBottom: 40,
+          paddingBottom: 120,
           alignItems: "center",
         }}
       >
@@ -193,6 +190,7 @@ export default function Home() {
           </View>
         </View>
       </ScrollView>
+    </SafeAreaView>
   </SafeAreaProvider>
   );
 }

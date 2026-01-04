@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
-import Navbar from '../../components/navbar';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import Navbar from '../../components/navbar'; 
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
 export default function HistoryScreen() {
@@ -11,16 +11,20 @@ export default function HistoryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
+  const insets = useSafeAreaInsets();
 
   const fetchHistory = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser(); //
     
     if (user) {
       setIsLoggedIn(true);
       const { data, error } = await supabase
         .from('experiments')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -74,16 +78,20 @@ export default function HistoryScreen() {
             <View key={idx} style={styles.objRow}>
               <View style={styles.objInfo}>
                 <View style={[styles.dot, { backgroundColor: obj.q1 > 0 ? '#4CAF50' : '#F44336' }]} />
-                <Text style={styles.objLabel}>Object {idx + 1}: <Text style={{fontWeight: 'bold'}}>{obj.q1} nC</Text></Text>
+                <Text style={[styles.objLabel, isMobile && { fontSize: 13 }]}>
+                  Object {idx + 1}: <Text style={{fontWeight: 'bold'}}>{obj.q1} nC</Text>
+                </Text>
               </View>
-              <Text style={styles.objForce}>{obj.force.toExponential(2)} N</Text>
+              <Text style={[styles.objForce, isMobile && { fontSize: 12 }]}>
+                {obj.force.toExponential(2)} N
+              </Text>
             </View>
           ))}
         </View>
       
         <View style={styles.insightBox}>
-          <Text style={styles.insightText}>
-              💡 <Text style={{fontWeight: 'bold'}}>:</Text> This scenario produces a maximum force of {maxForce.toExponential(2)} N.
+          <Text style={[styles.insightText, isMobile && { fontSize: 12 }]}>
+            💡 <Text style={{fontWeight: 'bold'}}>Insight:</Text> This scenario produces a maximum force of {maxForce.toExponential(2)} N.
           </Text>
         </View>
       </View>
@@ -92,62 +100,88 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#f8f9fa" }}>
-      <SafeAreaView style={{ flex: 0, backgroundColor: "transparent" }} />
-      
-      <Navbar />
-
-      <View style={styles.container}>
-        <View style={{ paddingHorizontal: 20, flex: 1 }}>
-          <Text style={styles.title}>Experiment History</Text>
-          
-          {loading && !refreshing ? (
-            <ActivityIndicator size="large" color="#002467ff" style={{ marginTop: 50 }} />
-          ) : (
-            <FlatList
-              data={history}
-              keyExtractor={(item) => item[0].id.toString()}
-              renderItem={renderItem}
-              contentContainerStyle={{ paddingBottom: 30 }}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-              ListEmptyComponent={
-                <View style={styles.emptyState}>
-                  {!isLoggedIn ? (
-                    <>
-                      <Text style={[styles.emptyText, { color: '#F44336' }]}>Please Login First</Text>
-                      <Text style={styles.emptySubText}>You need to be logged in to view your experiment history.</Text>
-                      <TouchableOpacity 
-                        style={styles.loginButton} 
-                        onPress={() => router.push('/login')}
-                      >
-                        <Text style={styles.loginButtonText}>Go to Login</Text>
-                      </TouchableOpacity>
-                    </>
-                  ) : (
-                    <>
+      <View style={[
+        styles.mainWrapper, 
+        { paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom }
+      ]}>
+        
+        {Platform.OS === 'web' && <Navbar />}
+        
+        <View style={styles.contentWrapper}>
+          <View style={[
+            styles.listWrapper,
+            { maxWidth: isMobile ? '100%' : 900 }
+          ]}>
+            <Text style={[styles.title, isMobile && { fontSize: 24 }]}>
+              Experiment History
+            </Text>
+            
+            {loading && !refreshing ? (
+              <ActivityIndicator size="large" color="#002467" style={{ marginTop: 50 }} />
+            ) : (
+              <FlatList
+                data={history}
+                keyExtractor={(item) => item[0].id.toString()}
+                renderItem={renderItem}
+                contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 40 : 150 }} 
+                refreshControl={
+                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                ListEmptyComponent={
+                  <View style={styles.emptyState}>
+                    {!isLoggedIn ? (
+                      <>
+                        <Text style={[styles.emptyText, { color: '#F44336' }]}>Please Login First</Text>
+                        <TouchableOpacity 
+                          style={styles.loginButton} 
+                          onPress={() => router.push('/(auth)/login')}
+                        >
+                          <Text style={styles.loginButtonText}>Go to Login</Text>
+                        </TouchableOpacity>
+                      </>
+                    ) : (
                       <Text style={styles.emptyText}>No experiment history yet.</Text>
-                      <Text style={styles.emptySubText}>Data will appear here after you click 'Save' in the Virtual Lab.</Text>
-                    </>
-                  )}
-                </View>
-              }
-            />
-          )}
+                    )}
+                  </View>
+                }
+              />
+            )}
+          </View>
         </View>
+
+        {Platform.OS !== 'web' && <Navbar />}
+        
       </View>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
-  title: { fontSize: 28, fontWeight: 'bold', marginVertical: 20, color: '#002467ff' },
+  mainWrapper: {
+    flex: 1,
+    backgroundColor: "#f8f9fa",
+  },
+  contentWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    width: '100%',
+  },
+  listWrapper: { 
+    flex: 1,
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    marginVertical: 20, 
+    color: '#002467',
+  },
   card: {
     backgroundColor: 'white',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 16,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -177,18 +211,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
   },
-  objInfo: { flexDirection: 'row', alignItems: 'center' },
+  objInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   dot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
-  objLabel: { fontSize: 14, color: '#444' },
+  objLabel: { fontSize: 14, color: '#444', flex: 1 },
   objForce: { fontSize: 13, color: '#2196F3', fontWeight: '500' },
   insightBox: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#eee' },
   insightText: { fontSize: 13, color: '#555', fontStyle: 'italic', lineHeight: 18 },
-  emptyState: { alignItems: 'center', marginTop: 100 },
-  emptyText: { fontSize: 18, fontWeight: 'bold', color: '#adb5bd' },
-  emptySubText: { color: '#ced4da', marginTop: 8, textAlign: 'center' },
+  emptyState: { alignItems: 'center', marginTop: 100, paddingHorizontal: 20 },
+  emptyText: { fontSize: 18, fontWeight: 'bold', color: '#adb5bd', textAlign: 'center' },
   loginButton: {
     marginTop: 20,
-    backgroundColor: '#002467ff',
+    backgroundColor: '#002467',
     paddingHorizontal: 25,
     paddingVertical: 12,
     borderRadius: 10,

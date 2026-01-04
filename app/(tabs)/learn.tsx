@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, ScrollView, useWindowDimensions, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { WebView } from 'react-native-webview';
+import YoutubePlayer from "react-native-youtube-iframe";
 import Navbar from '../../components/navbar';
 
 const quizData = [
@@ -10,11 +10,11 @@ const quizData = [
     question: "Two electric charges are placed close to each other. If the distance between the charges is doubled, how does the Coulomb force change?",
     options: ["Remains the same", "Becomes twice as large", "Becomes four times larger", "Becomes half as large", "Becomes one–fourth of the original"],
     correctIndex: 4,
-    explanation: "According to Coulomb’s Law: F = k (q1.q2 / r²). The force is inversely proportional to the square of the distance. If distance is doubled (2r), the force becomes 1/(2)² = 1/4 of original."
+    explanation: "According to Coulomb's Law: F = k (q1.q2 / r²). The force is inversely proportional to the square of the distance. If distance is doubled (2r), the force becomes 1/(2)² = 1/4 of original."
   },
   {
     id: 2,
-    question: "Which statement best describes Coulomb’s Law?",
+    question: "Which statement best describes Coulomb's Law?",
     options: [
       "The force depends only on the magnitude of the charges",
       "The force is always attractive",
@@ -44,10 +44,18 @@ const quizData = [
 export default function Learn() {
   const { width } = useWindowDimensions();
   const isLarge = width > 1000;
-  const videoId = "kCp5yYjo9zE";
+  const isMobile = width < 768;
+  const videoId = "kCp5yYjo9zE"; // ID Video YouTube
 
   const [userAnswers, setUserAnswers] = useState<{[key: number]: number}>({});
   const [score, setScore] = useState(0);
+  const [playing, setPlaying] = useState(false);
+
+  const onStateChange = useCallback((state: string) => {
+    if (state === "ended") {
+      setPlaying(false);
+    }
+  }, []);
 
   const handleAnswer = (questionId: number, index: number, correctIndex: number) => {
     if (userAnswers[questionId] !== undefined) return;
@@ -65,34 +73,51 @@ export default function Learn() {
   };
 
   const renderVideo = () => {
-    const videoUrl = `https://www.youtube.com/embed/${videoId}`;
     if (Platform.OS === 'web') {
+      const videoUrl = `https://www.youtube.com/embed/${videoId}`;
       return <iframe src={videoUrl} frameBorder="0" allowFullScreen style={{ width: '100%', height: '100%', borderRadius: 12 }} />;
     } else {
-      return <WebView style={styles.video} javaScriptEnabled domStorageEnabled source={{ uri: videoUrl }} />;
+      return (
+        <YoutubePlayer
+          height={"100%"}
+          play={playing}
+          videoId={videoId}
+          onChangeState={onStateChange}
+        />
+      );
     }
   };
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#EEEEEE" }}>
-      <SafeAreaView style={{ flex: 0, backgroundColor: "transparent" }} />
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEE" }} edges={['top']}>
+        <Navbar />
 
-      <Navbar />
-
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <View style={styles.contentWrapper}>
-          
-          <View style={[styles.mainWrapper, { width: isLarge ? "60%" : "100%" }]}>
+        <ScrollView contentContainerStyle={{ 
+          paddingBottom: 120,
+          alignItems: 'center',
+        }}>
+          <View style={[
+            styles.mainWrapper, 
+            { 
+              width: isLarge ? "60%" : "100%",
+              maxWidth: 900,
+              paddingHorizontal: isMobile ? 16 : 0,
+            }
+          ]}>
             
+            {/* Header Section */}
             <View style={styles.containerStyle}>
               <Text style={styles.titleText}>Learn: Coulomb's Law</Text>
               <Text style={styles.description}>Understand point charge interactions through the video and quiz below.</Text>
             </View>
 
+            {/* Video Player Section */}
             <View style={styles.videoCard}>
               <View style={styles.videoWrapper}>{renderVideo()}</View>
             </View>
 
+            {/* Score Section */}
             <View style={styles.scoreCard}>
               <View>
                 <Text style={styles.quizTitle}>Knowledge Check</Text>
@@ -110,6 +135,7 @@ export default function Learn() {
               )}
             </View>
 
+            {/* Quiz Section */}
             {quizData.map((quiz) => (
               <View key={quiz.id} style={styles.containerStyle}>
                 <Text style={styles.quizQuestion}>{quiz.id}. {quiz.question}</Text>
@@ -148,23 +174,56 @@ export default function Learn() {
               </View>
             ))}
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  contentWrapper: { flex: 1, alignItems: 'center' }, // Pengganti SafeAreaView pembungkus agar tidak ada garis samping
-  mainWrapper: { alignItems: 'center', width: '100%' },
-  containerStyle: {
-    margin: 12, padding: 16, borderRadius: 16, backgroundColor: "white", elevation: 5, width: '90%',
+  mainWrapper: { 
+    alignItems: 'center', 
+    width: '100%' 
   },
-  videoCard: { margin: 16, borderRadius: 16, backgroundColor: "white", elevation: 5, overflow: 'hidden', width: '90%' },
-  videoWrapper: { width: '100%', aspectRatio: 16 / 9 },
-  video: { flex: 1 },
-  titleText: { fontSize: 24, fontWeight: "bold", color: "#002467" },
-  description: { fontSize: 15, color: "#444", marginTop: 5 },
+  containerStyle: {
+    marginVertical: 12,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "white",
+    elevation: 5,
+    width: '100%',
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  videoCard: { 
+    marginVertical: 12,
+    borderRadius: 16, 
+    backgroundColor: "black", 
+    elevation: 5, 
+    overflow: 'hidden', 
+    width: '100%',
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  videoWrapper: { 
+    width: '100%', 
+    aspectRatio: 16 / 9 
+  },
+  titleText: { 
+    fontSize: 24, 
+    fontWeight: "bold", 
+    color: "#002467",
+    marginBottom: 8,
+  },
+  description: { 
+    fontSize: 15, 
+    color: "#444", 
+    lineHeight: 22,
+  },
   
   scoreCard: {
     flexDirection: 'row',
@@ -173,23 +232,92 @@ const styles = StyleSheet.create({
     backgroundColor: '#002467',
     padding: 20,
     borderRadius: 16,
-    width: '90%',
-    marginVertical: 10,
+    width: '100%',
+    marginVertical: 12,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
   },
-  quizTitle: { color: '#FF9800', fontSize: 14, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 5 },
-  scoreLabel: { color: 'white', fontSize: 18, fontWeight: 'bold' },
-  scoreValue: { color: 'white', fontSize: 22, fontWeight: 'bold' },
+  quizTitle: { 
+    color: '#FF9800', 
+    fontSize: 14, 
+    fontWeight: 'bold', 
+    textTransform: 'uppercase', 
+    marginBottom: 5 
+  },
+  scoreLabel: { 
+    color: 'white', 
+    fontSize: 18, 
+    fontWeight: 'bold' 
+  },
+  scoreValue: { 
+    color: 'white', 
+    fontSize: 24, 
+    fontWeight: 'bold' 
+  },
 
-  quizQuestion: { fontSize: 16, fontWeight: '700', marginBottom: 15, color: '#333' },
-  optionContainer: { gap: 10 },
-  quizOption: { padding: 12, backgroundColor: 'white', borderRadius: 10, borderWidth: 1, borderColor: '#e0e0e0' },
-  correctOption: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
-  wrongOption: { backgroundColor: '#F44336', borderColor: '#F44336' },
-  optionText: { fontSize: 14, color: '#333' },
-  explanationBox: { marginTop: 15, padding: 12, backgroundColor: '#E3F2FD', borderRadius: 10, borderLeftWidth: 4, borderLeftColor: '#2196F3' },
-  explanationTitle: { fontWeight: 'bold', color: '#1565C0', marginBottom: 4 },
-  explanationText: { fontSize: 13, color: '#444', lineHeight: 18 },
+  quizQuestion: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    marginBottom: 15, 
+    color: '#333',
+    lineHeight: 24,
+  },
+  optionContainer: { 
+    gap: 10 
+  },
+  quizOption: { 
+    padding: 14, 
+    backgroundColor: 'white', 
+    borderRadius: 10, 
+    borderWidth: 2, 
+    borderColor: '#e0e0e0' 
+  },
+  correctOption: { 
+    backgroundColor: '#4CAF50', 
+    borderColor: '#4CAF50' 
+  },
+  wrongOption: { 
+    backgroundColor: '#F44336', 
+    borderColor: '#F44336' 
+  },
+  optionText: { 
+    fontSize: 14, 
+    color: '#333',
+    lineHeight: 20,
+  },
+  explanationBox: { 
+    marginTop: 15, 
+    padding: 14, 
+    backgroundColor: '#E3F2FD', 
+    borderRadius: 10, 
+    borderLeftWidth: 4, 
+    borderLeftColor: '#2196F3' 
+  },
+  explanationTitle: { 
+    fontWeight: 'bold', 
+    color: '#1565C0', 
+    marginBottom: 6,
+    fontSize: 14,
+  },
+  explanationText: { 
+    fontSize: 14, 
+    color: '#444', 
+    lineHeight: 20 
+  },
 
-  retakeButton: { backgroundColor: '#FF9800', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 10 },
-  retakeButtonText: { color: 'white', fontWeight: 'bold', fontSize: 14}
+  retakeButton: { 
+    backgroundColor: '#FF9800', 
+    paddingVertical: 10, 
+    paddingHorizontal: 18, 
+    borderRadius: 10,
+    elevation: 2,
+  },
+  retakeButtonText: { 
+    color: 'white', 
+    fontWeight: 'bold', 
+    fontSize: 14
+  }
 });

@@ -225,7 +225,7 @@ export default function App() {
             key={`${x}-${y}`}
             x={x} y={y}
             width={step} height={step}
-            fill="yellow" // DIKEMBALIKAN KE YELLOW
+            fill="yellow"
             fillOpacity={intensity}
           />
         );
@@ -294,6 +294,9 @@ export default function App() {
 
   return (
     <SafeAreaProvider style={{ backgroundColor: "#EEEEEEff" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#EEEEEEff" }} edges={['top']}>
+        <Navbar />
+        
         <CustomAlert
           visible={alertConfig.visible}
           type={alertConfig.type}
@@ -303,206 +306,381 @@ export default function App() {
           onClose={() => setAlertConfig({ ...alertConfig, visible: false })}
         />
 
-        <SafeAreaView style={{ flex: 0, backgroundColor: "transparent" }} />
-
-        <View style={{ backgroundColor: "#EEEEEEff", flex: 1 }}>
-          <Navbar />
-
-          <ScrollView
-            scrollEnabled={!dragging}
-            contentContainerStyle={{ paddingBottom: 40 }}
+        <ScrollView
+          scrollEnabled={!dragging}
+          contentContainerStyle={{ paddingBottom: 120 }}
+        >
+          <View
+            style={{
+              flex: 1,
+              flexDirection: isLarge ? "row" : "column",
+            }}
           >
-            <View
-              style={{
-                flex: 1,
-                flexDirection: isLarge ? "row" : "column",
-              }}
-            >
-              {/* left side */}
-              <View style={{ width: isLarge ? "38%" : "100%" }}>
-                <View style={styles.containerStyle}>
-                  <Text style={styles.titleText}>Coulomb's Law Simulator</Text>
+            {/* left side */}
+            <View style={{ width: isLarge ? "38%" : "100%" }}>
+              <View style={styles.containerStyle}>
+                <Text style={[styles.titleText, isMobile && { fontSize: 20 }]}>
+                  Coulomb's Law Simulator
+                </Text>
+              </View>
+
+              <View style={styles.containerStyle}>
+                <Text style={[styles.subtitleText, isMobile && { fontSize: 18 }]}>
+                  Force Display
+                </Text>
+                <Text style={[styles.description, isMobile && { fontSize: 13 }]}>
+                  Move the charges around to see the forces.
+                </Text>
+                
+                <View 
+                  style={[styles.canvasStyle, isMobile && { height: 200, marginTop: 8 }]} 
+                  onLayout={(e) => setCanvas(e.nativeEvent.layout)}
+                >
+                  {canvas && (
+                    <>
+                      <Svg width={canvas.width} height={canvas.height} pointerEvents="none">
+                        {(() => {
+                          const spacing = 20;
+                          const lines = [];
+                          for (let x = 0; x < canvas.width; x += spacing) {
+                            lines.push(<SvgLine key={`v-${x}`} x1={x} y1={0} x2={x} y2={canvas.height} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />);
+                          }
+                          for (let y = 0; y < canvas.height; y += spacing) {
+                            lines.push(<SvgLine key={`h-${y}`} x1={0} y1={y} x2={canvas.width} y2={y} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />);
+                          }
+                          return lines;
+                        })()}
+                        {charges.map(c => (
+                          <SvgImage
+                            key={c.id}
+                            x={c.x} y={c.y}
+                            width={20} height={20}
+                            href={c.q > 0 ? require("../../assets/images/positive.png") : require("../../assets/images/negative.png")}
+                          />
+                        ))}
+                      </Svg>
+                      {charges.map(c => {
+                        const pan = Gesture.Pan()
+                          .onBegin(() => {
+                            setDragging(true);
+                            setCharges(prev => prev.map(ch => ch.id === c.id ? { ...ch, startX: ch.x, startY: ch.y } : ch));
+                          })
+                          .onUpdate(e => {
+                            if (!canvas) return;
+                            setCharges(prev => prev.map(ch => ch.id === c.id ? {
+                              ...ch,
+                              x: Math.max(0, Math.min(canvas.width - 20, (ch.startX ?? ch.x) + e.translationX)),
+                              y: Math.max(0, Math.min(canvas.height - 20, (ch.startY ?? ch.y) + e.translationY)),
+                            } : ch));
+                          })
+                          .onEnd(() => {
+                            setDragging(false);
+                            setCharges(prev => prev.map(ch => ch.id === c.id ? { ...ch, startX: undefined, startY: undefined } : ch));
+                          })
+                          .runOnJS(true);
+                        return (
+                          <GestureDetector key={c.id} gesture={pan}>
+                            <View style={{ position: "absolute", width: 30, height: 30, left: c.x - 5, top: c.y - 5 }} />
+                          </GestureDetector>
+                        );
+                      })}
+                    </>
+                  )}
                 </View>
 
-                <View style={styles.containerStyle}>
-                  <Text style={{ fontSize: 24, fontWeight: "bold" }}>Force Display</Text>
-                  <Text style={{ fontSize: 15 }}>Move the charges around to see the forces.</Text>
+                <View style={styles.measurementContainer}>
+                  <Text style={[styles.measurementTitle, isMobile && { fontSize: 18 }]}>
+                    Object Measurements
+                  </Text>
                   
-                  <View 
-                    style={[styles.canvasStyle, isMobile && { height: 260 }]} 
-                    onLayout={(e) => setCanvas(e.nativeEvent.layout)}
+                  <ScrollView 
+                    style={[styles.measurementList, isMobile && { maxHeight: 200 }]}
+                    nestedScrollEnabled={true}
+                    showsVerticalScrollIndicator={true}
                   >
-                    {canvas && (
-                      <>
-                        <Svg width={canvas.width} height={canvas.height} pointerEvents="none">
-                          {(() => {
-                            const spacing = 20;
-                            const lines = [];
-                            for (let x = 0; x < canvas.width; x += spacing) {
-                              lines.push(<SvgLine key={`v-${x}`} x1={x} y1={0} x2={x} y2={canvas.height} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />);
-                            }
-                            for (let y = 0; y < canvas.height; y += spacing) {
-                              lines.push(<SvgLine key={`h-${y}`} x1={0} y1={y} x2={canvas.width} y2={y} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />);
-                            }
-                            return lines;
-                          })()}
-                          {charges.map(c => (
-                            <SvgImage
-                              key={c.id}
-                              x={c.x} y={c.y}
-                              width={20} height={20}
-                              href={c.q > 0 ? require("../../assets/images/positive.png") : require("../../assets/images/negative.png")}
-                            />
-                          ))}
-                        </Svg>
-                        {charges.map(c => {
-                          const pan = Gesture.Pan()
-                            .onBegin(() => {
-                              setDragging(true);
-                              setCharges(prev => prev.map(ch => ch.id === c.id ? { ...ch, startX: ch.x, startY: ch.y } : ch));
-                            })
-                            .onUpdate(e => {
-                              if (!canvas) return;
-                              setCharges(prev => prev.map(ch => ch.id === c.id ? {
-                                ...ch,
-                                x: Math.max(0, Math.min(canvas.width - 20, (ch.startX ?? ch.x) + e.translationX)),
-                                y: Math.max(0, Math.min(canvas.height - 20, (ch.startY ?? ch.y) + e.translationY)),
-                              } : ch));
-                            })
-                            .onEnd(() => {
-                              setDragging(false);
-                              setCharges(prev => prev.map(ch => ch.id === c.id ? { ...ch, startX: undefined, startY: undefined } : ch));
-                            })
-                            .runOnJS(true);
-                          return (
-                            <GestureDetector key={c.id} gesture={pan}>
-                              <View style={{ position: "absolute", width: 30, height: 30, left: c.x - 5, top: c.y - 5 }} />
-                            </GestureDetector>
-                          );
-                        })}
-                      </>
-                    )}
-                  </View>
+                    {forceData.map(f => (
+                      <View key={f.id} style={styles.objectMeasurement}>
+                        <Text style={[styles.objectTitle, isMobile && { fontSize: 13 }]}>
+                          Object {f.id}
+                        </Text>
+                        <Text style={isMobile && { fontSize: 11 }}>
+                          Position : ({Math.round(f.x)} , {canvas ? Math.round(canvas.height - f.y - 20) : 0})
+                        </Text>
+                        <Text style={isMobile && { fontSize: 11 }}>
+                          Fx : {f.Fx.toExponential(2)} N , Fy : {f.Fy.toExponential(2)} N
+                        </Text>
+                        <Text style={[{ fontWeight: 'bold' }, isMobile && { fontSize: 11 }]}>
+                          |F| : {f.magnitude.toExponential(2)} N
+                        </Text>
+                      </View>
+                    ))}
+                  </ScrollView>
+                  
+                  <Pressable 
+                    onPress={saveExperiment}
+                    style={({ pressed }) => [styles.saveButton, pressed && styles.saveButtonPressed]}
+                  >
+                    <Text style={[styles.saveButtonText, isMobile && { fontSize: 13 }]}>
+                      Save this experiment
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
 
-                  <View style={styles.measurementContainer}>
-                    <Text style={styles.measurementTitle}>Object Measurements</Text>
-                    
-                    <View style={{ maxHeight: isMobile ? 180 : 400 }}>
-                      <ScrollView nestedScrollEnabled={true}>
-                        {forceData.map(f => (
-                          <View key={f.id} style={styles.objectMeasurement}>
-                            <Text style={{ fontSize: 15, fontWeight: "bold" }}>Object {f.id}</Text>
-                            <Text style={{ fontSize: 12 }}>Position : ({Math.round(f.x)} , {canvas ? Math.round(canvas.height - f.y - 20) : 0})</Text>
-                            <Text style={{ fontSize: 12 }}>Fx : {f.Fx.toExponential(2)} N , Fy : {f.Fy.toExponential(2)} N</Text>
-                            <Text style={{ fontSize: 12, fontWeight: 'bold' }}>|F| : {f.magnitude.toExponential(2)} N</Text>
-                          </View>
-                        ))}
-                      </ScrollView>
-                    </View>
-                    
-                    <Pressable 
-                      onPress={saveExperiment}
-                      style={({ pressed }) => [styles.saveButton, pressed && { opacity: 0.7 }]}
-                    >
-                      <Text style={styles.saveButtonText}>Save this experiment</Text>
+              {showEField && <FieldPlot title="Electric Field" render={(w,h)=>renderElectric(w,h)} />}
+              {showPField && <FieldPlot title="Potential Field" render={(w,h)=>renderPotential(w,h)} />}
+            </View>
+
+            {/* right side */}
+            <View style={{ width: isLarge ? "56%" : "100%", paddingHorizontal: isMobile ? 0 : 8 }}>
+              <View style={styles.containerStyle}>
+                <View style={styles.headerRow}>
+                  <Text style={[styles.titleText, isMobile && { fontSize: 18 }]}>
+                    Add up to 5 objects
+                  </Text>
+                  <View style={styles.headerButtons}>
+                    <TouchableOpacity onPress={clearAll}>
+                      <Text style={[styles.clearButtonText, isMobile && { fontSize: 12 }]}>
+                        Clear All
+                      </Text>
+                    </TouchableOpacity>
+                    <Pressable onPress={addCard}>
+                      <RNImage 
+                        source={require("../../assets/images/plus-butt.png")} 
+                        style={[styles.plusIcon, isMobile && { width: 25, height: 25 }]} 
+                      />
                     </Pressable>
                   </View>
                 </View>
-
-                {showEField && <FieldPlot title="Electric Field" render={(w,h)=>renderElectric(w,h)} />}
-                {showPField && <FieldPlot title="Potential Field" render={(w,h)=>renderPotential(w,h)} />}
               </View>
 
-              {/* right side */}
-              <View style={{ width: isLarge ? "56%" : "100%", paddingHorizontal: isMobile ? 0 : 8 }}>
-                <View style={styles.containerStyle}>
+              {cards.map((c, index) => (
+                <View key={index} style={styles.containerStyle}>
                   <View style={styles.headerRow}>
-                    <Text style={[styles.titleText, isMobile && { fontSize: 18 }]}>Add up to 5 objects</Text>
-                    <View style={styles.headerButtons}>
-                      <TouchableOpacity onPress={clearAll}>
-                        <Text style={styles.clearButtonText}>Clear All</Text>
-                      </TouchableOpacity>
-                      <Pressable onPress={addCard}>
-                        <RNImage source={require("../../assets/images/plus-butt.png")} style={styles.plusIcon} />
-                      </Pressable>
-                    </View>
+                    <Text style={[styles.subtitleText, isMobile && { fontSize: 16 }]}>
+                      Object {index + 1}
+                    </Text>
+                    <Pressable onPress={() => removeCard(index)}>
+                      <RNImage source={require("../../assets/images/x.png")} style={styles.xicon} />
+                    </Pressable>
+                  </View>
+                  
+                  <View style={styles.chargeRow}>
+                    <Text style={[styles.chargeLabel, isMobile && { fontSize: 13 }]}>
+                      Charge :
+                    </Text>
+                    <TextInput
+                      style={[styles.textInputStyle, isMobile && { width: 60, height: 32, fontSize: 13 }]}
+                      keyboardType="numeric"
+                      value={String(charges[index]?.q || '')}
+                      onChangeText={(text) => {
+                        if (text === '' || text === '-') {
+                          setCharges(prev => {
+                            const copy = [...prev];
+                            copy[index].q = text as any; 
+                            return copy;
+                          });
+                          return;
+                        }
+                        const num = parseFloat(text);
+                        if (!isNaN(num)) addCharge(index, num);
+                      }}
+                    />
+                    <Text style={isMobile && { fontSize: 13 }}>nC</Text>
+                  </View>
+                  
+                  <View style={styles.polarityRow}>
+                    <Text style={[styles.chargeLabel, isMobile && { fontSize: 13 }]}>
+                      Polarity :
+                    </Text>
+                    <Pressable onPress={() => changePolarity(index)}>
+                      <RNImage 
+                        source={charges[index]?.q > 0 ? require("../../assets/images/positive.png") : require("../../assets/images/negative.png")} 
+                        style={styles.polarButton} 
+                      />
+                    </Pressable>
                   </View>
                 </View>
+              ))}
 
-                {cards.map((c, index) => (
-                  <View key={index} style={styles.containerStyle}>
-                    <View style={styles.headerRow}>
-                      <Text style={styles.subtitleText}>Object {index + 1}</Text>
-                      <Pressable onPress={() => removeCard(index)}>
-                        <RNImage source={require("../../assets/images/x.png")} style={styles.xicon} />
-                      </Pressable>
-                    </View>
-                    <Text style={styles.chargeText}>
-                      Charge : <TextInput
-                        style={styles.textInputStyle}
-                        keyboardType="numeric"
-                        value={String(charges[index]?.q || '')}
-                        onChangeText={(text) => {
-                          if (text === '' || text === '-') {
-                            setCharges(prev => {
-                              const copy = [...prev];
-                              copy[index].q = text as any; 
-                              return copy;
-                            });
-                            return;
-                          }
-                          const num = parseFloat(text);
-                          if (!isNaN(num)) addCharge(index, num);
-                        }}
-                      /> nC
-                    </Text>
-                    <View style={styles.polarButtonSeparator}>
-                      <Text style={{ fontSize: 15 }}>Polarity :</Text>
-                      <Pressable onPress={() => changePolarity(index)}>
-                        <RNImage source={charges[index]?.q > 0 ? require("../../assets/images/positive.png") : require("../../assets/images/negative.png")} style={styles.polarButton} />
-                      </Pressable>
-                    </View>
-                  </View>
-                ))}
-
-                <View style={styles.containerStyle}>
-                  <View style={styles.toggleRow}>
-                    <Text style={styles.subtitleText}>Show Electric Fields :</Text>
-                    <Switch trackColor={{ false: "#c1c1c1", true: "#00ff0d" }} thumbColor={showEField ? "#009b08" : "#f4f3f4"} value={showEField} onValueChange={setShowEField} />
-                  </View>
-                  <View style={styles.toggleRow}>
-                    <Text style={styles.subtitleText}>Show Potential Fields :</Text>
-                    <Switch trackColor={{ false: "#c1c1c1", true: "#00ff0d" }} thumbColor={showPField ? "#009b08" : "#f4f3f4"} value={showPField} onValueChange={setShowPField} />
-                  </View>
+              <View style={styles.containerStyle}>
+                <View style={styles.toggleRow}>
+                  <Text style={[styles.subtitleText, isMobile && { fontSize: 14, flex: 1 }]}>
+                    Show Electric Fields :
+                  </Text>
+                  <Switch 
+                    trackColor={{ false: "#c1c1c1", true: "#00ff0d" }} 
+                    thumbColor={showEField ? "#009b08" : "#f4f3f4"} 
+                    value={showEField} 
+                    onValueChange={setShowEField} 
+                  />
+                </View>
+                <View style={styles.toggleRow}>
+                  <Text style={[styles.subtitleText, isMobile && { fontSize: 14, flex: 1 }]}>
+                    Show Potential Fields :
+                  </Text>
+                  <Switch 
+                    trackColor={{ false: "#c1c1c1", true: "#00ff0d" }} 
+                    thumbColor={showPField ? "#009b08" : "#f4f3f4"} 
+                    value={showPField} 
+                    onValueChange={setShowPField} 
+                  />
                 </View>
               </View>
             </View>
-          </ScrollView>
-        </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  mapStyle: { height: 320, borderRadius: 12, overflow: "hidden", backgroundColor: "#ee00ffff" },
-  containerStyle: { marginHorizontal: 16, marginVertical: 8, padding: 16, borderRadius: 16, backgroundColor: "white", elevation: 5 },
-  titleText: { fontSize: 24, fontWeight: "bold" },
-  subtitleText: { fontSize: 18, fontWeight: "bold" },
-  chargeText: { fontSize: 15, paddingTop: 16, paddingBottom: 8 },
-  canvasStyle: { marginTop: 10, height: 320, borderRadius: 12, overflow: "hidden", backgroundColor: "#111", position: "relative" },
-  measurementContainer: { marginTop: 12, padding: 12, borderRadius: 10, backgroundColor: "#002467ff" },
-  measurementTitle: { color: "white", fontSize: 20, fontWeight: "bold", marginBottom: 8 },
-  objectMeasurement: { backgroundColor: "#ffffff", marginBottom: 8, padding: 10, borderRadius: 8 },
-  saveButton: { backgroundColor: "#4CAF50", marginTop: 10, padding: 12, borderRadius: 8, alignItems: "center" },
-  saveButtonText: { color: "white", fontWeight: "bold", fontSize: 14 },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerButtons: { flexDirection: 'row', alignItems: 'center', gap: 15 },
-  clearButtonText: { color: '#ff4444', fontWeight: 'bold', fontSize: 14 },
-  toggleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 },
-  plusIcon: { width: 30, height: 30 },
-  xicon:{ width: 20, height: 20 },
-  textInputStyle:{ marginLeft: 10, width: 70, height: 36, borderWidth: 1, borderColor: "#555", borderRadius: 6, paddingHorizontal: 8, backgroundColor: "white" },
-  polarButtonSeparator:{ flexDirection: "row", alignItems: "center" },
-  polarButton:{ width: 20, height: 20, marginLeft: 24 },
-  fieldTitle:{ fontSize: 24, fontWeight: "bold", marginBottom: 10 },
+  mapStyle: { 
+    height: 320, 
+    borderRadius: 12, 
+    overflow: "hidden", 
+    backgroundColor: "#ee00ffff" 
+  },
+  containerStyle: { 
+    marginHorizontal: 12,
+    marginVertical: 8,
+    padding: 14,
+    borderRadius: 16, 
+    backgroundColor: "white", 
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  titleText: { 
+    fontSize: 24, 
+    fontWeight: "bold" 
+  },
+  subtitleText: { 
+    fontSize: 18, 
+    fontWeight: "bold" 
+  },
+  description: { 
+    fontSize: 15,
+    marginTop: 4,
+    color: "#666",
+  },
+  chargeLabel: {
+    fontSize: 15,
+  },
+  chargeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 12,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  canvasStyle: { 
+    marginTop: 10, 
+    height: 320, 
+    borderRadius: 12, 
+    overflow: "hidden", 
+    backgroundColor: "#111", 
+    position: "relative",
+    width: "100%",
+  },
+  measurementContainer: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "#002467ff",
+  },
+  measurementTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 6,
+  },
+  measurementList: {
+    maxHeight: 300,
+  },
+  objectMeasurement: { 
+    backgroundColor: "#ffffff", 
+    marginBottom: 8, 
+    padding: 8, 
+    borderRadius: 8 
+  },
+  objectTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  saveButton: { 
+    backgroundColor: "#4CAF50", 
+    marginTop: 10, 
+    padding: 10, 
+    borderRadius: 8, 
+    alignItems: "center" 
+  },
+  saveButtonPressed: {
+    backgroundColor: "#45a049",
+  },
+  saveButtonText: { 
+    color: "white", 
+    fontWeight: "bold", 
+    fontSize: 14 
+  },
+  headerRow: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  headerButtons: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 12 
+  },
+  clearButtonText: { 
+    color: '#ff4444', 
+    fontWeight: 'bold', 
+    fontSize: 14 
+  },
+  toggleRow: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    alignItems: "center", 
+    paddingVertical: 10,
+    gap: 8,
+  },
+  plusIcon: { 
+    width: 30, 
+    height: 30 
+  },
+  xicon:{ 
+    width: 20, 
+    height: 20 
+  },
+  textInputStyle:{ 
+    width: 70, 
+    height: 36, 
+    borderWidth: 1, 
+    borderColor: "#555", 
+    borderRadius: 6, 
+    paddingHorizontal: 8, 
+    backgroundColor: "white" 
+  },
+  polarityRow:{ 
+    flexDirection: "row", 
+    alignItems: "center",
+    gap: 8,
+  },
+  polarButton:{ 
+    width: 20, 
+    height: 20,
+    marginLeft: 8,
+  },
+  fieldTitle:{ 
+    fontSize: 24, 
+    fontWeight: "bold", 
+    marginBottom: 10 
+  },
 });
