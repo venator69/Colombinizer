@@ -1,58 +1,56 @@
-# Welcome to Colombinizer !
+# Colombinizer ⚡
 
-This app allows you to simulate and visualize 
-electric forces between charged particles using 
-Coulomb's law. You can add, move, and modify 
-particles to see how they interact with each 
-other based on their charges and distances.
+Colombinizer is a cross-platform educational application that provides interactive simulations of **Coulomb’s Law** to support physics learning through virtual experimentation.
 
-# Welcome to your Expo app 👋
+This application was developed as the **Final Exam** project for:
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**II3140 – Web and Mobile Application Development (K02)**  
+Institut Teknologi Bandung
 
-## Get started
+🌐 Live Demo: https://colombinizer.vercel.app
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Developers
+- Dennis Hubert (13222018)
+- Nurul Na'im Natifah (18223106)
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## Features
+- User authentication
+- Physics learning materials
+- Interactive quizzes
+- Coulomb’s Law virtual simulation
+- Save and view simulation history
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Technology Stack
+- **Frontend:** React Native (Expo)
+- **Routing:** Expo Router
+- **Backend:** Supabase (Authentication & PostgreSQL Database)
+- **Visualization:** React Native SVG
+- **Gesture Handling:** React Native Gesture Handler
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
-
-When you're ready, run:
-
+## Installation
+1. Clone the repository
 ```bash
-npm run reset-project
+git clone https://github.com/venator69/colombinizer.git
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+2. Install dependencies
+```bash
+npm install
+```
+3. Configure environment variables
+Create a .env file in the root directory:
+```bash
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+4. Run the application
+```bash
+npm expo start
+```
